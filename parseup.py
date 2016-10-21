@@ -186,7 +186,9 @@ def euclid_slope_lat_long(latitude_array, longitude_array, time_list):
         lon_part = math.sin((lat2 - lat1) / 2) ** 2
         sqrt_part = (lon_part + math.cos(lat1) * math.cos(lat2) * lat_part) ** (0.5)
         return 2 * r * math.asin(sqrt_part)
-
+    # similar to fibonacci alg. change to address efficiency.
+    # create array of size n
+    # iterate over distances, change values of array
     while index_of_n + 1 < len(latitude_array):
         distance = haversine(latitude_array[index_of_n], latitude_array[index_of_n + 1],
                              longitude_array[index_of_n], longitude_array[index_of_n + 1])
