@@ -3,6 +3,7 @@
 import os
 import json
 import pandas as pd
+import re
 import datetime
 import math
 from pandas.io.json import json_normalize
@@ -228,4 +229,12 @@ import numpy as np
 # show the results
 #show(p)
 
+# get IDs from filepaths, create new colums for patient ID
+ID_array = []
+for each in step_data['id']:
+    regex = r"(?<=\W)[a-zA-Z0-9]{6}"
+    test_str = each
+    matches = re.findall(regex, test_str)
+    ID_array.append(matches[3])
+step_data['ID'] = ID_array
 print step_data
