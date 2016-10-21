@@ -38,9 +38,11 @@ def createdataframe(path, datatofind):
     if datatofind == 'sleep':
         string_to_search_for = 'sleep'
         json_key = 'sleep'
+        json_key_2 = 'summary'
     elif datatofind == 'step':
         string_to_search_for = 'step'
         json_key = 'activities-steps'
+        json_key_2 =  "activities-steps-intraday"
     elif datatofind == 'survey':
         string_to_search_for = '_'
 
@@ -116,7 +118,7 @@ def createdataframe(path, datatofind):
             # insert ID by traversing dictionary of directory/files again
             for date in dates:
                 # create the dataframe for each date
-                df.append(json_normalize(data[date], json_key))
+                df.append(json_normalize(data[date], json_key, json_key_2))
             singleframe = pd.concat(df)
             singleframe['id'] = json_file
             all_frames.append(singleframe)
@@ -195,7 +197,7 @@ def euclid_slope_lat_long(latitude_array, longitude_array, time_list):
         index_of_n += 1
     return times, velocities
 
-data = euclid_slope_lat_long(euclidlist[0], euclidlist[1], euclidlist[2])
+#data = euclid_slope_lat_long(euclidlist[0], euclidlist[1], euclidlist[2])
 import collections
 
 
@@ -207,19 +209,21 @@ import numpy as np
 
 # from bokeh.plotting import figure, output_file, show
 # print data
-x = data[0]
+#x = data[0]
 # x = (map(lambda x: datetime.datetime.fromtimestamp(int(x)).strftime('%Y-%m-%d'),data[0]))
 #print x
-y = data[1]
+#y = data[1]
 
 # output to static HTML file
-output_file("lines.html")
+#output_file("lines.html")
 
 # create a new plot with a title and axis labels
-p = figure(title="Velocity Vs Time Using Raw GPS Data", x_axis_label='Date Time', y_axis_label='MPH', )
+#p = figure(title="Velocity Vs Time Using Raw GPS Data", x_axis_label='Date Time', y_axis_label='MPH', )
 
 # add a line renderer with legend and line thickness
-p.line(x, y, legend="Velocity.", line_width=2)
-p.xaxis.major_label_orientation = np.pi / 4
+#p.line(x, y, legend="Velocity.", line_width=2)
+#p.xaxis.major_label_orientation = np.pi / 4
 # show the results
-show(p)
+#show(p)
+
+print step_data
