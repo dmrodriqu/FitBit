@@ -30,101 +30,108 @@ path = '/Users/Dylan/Dropbox/FitBit/data_20161012'
 # ----step_json_file
 # ----survey_json_file
 
-def createdataframe(path, datatofind):
-    # type: (string, string) -> np.dataFrame
-    # setup of divide and conquer for creation of dictionary of directory and subdirectory of patient information
-    # set json keys and path values
-    string_to_search_for = ''
-    json_key = ''
-    if datatofind == 'sleep':
-        string_to_search_for = 'sleep'
-        json_key = 'sleep'
-        json_key_2 = 'summary'
-    elif datatofind == 'step':
-        string_to_search_for = 'step'
-        json_key = 'activities-steps'
-        json_key_2 =  "activities-steps-intraday"
-    elif datatofind == 'survey':
-        string_to_search_for = '_'
+class Table:
 
-    # path  --> list of directories in data_1
-    def directList(path):
-        # type: (string) -> [string]
-        directoryList = [x for x in os.listdir(path) if os.path.isdir(x) and x != '.git']
-        return directoryList
+    def createdataframe(self, path, datatofind):
+        # type: (string, string) -> np.dataFrame
+        # setup of divide and conquer for creation of dictionary of directory and subdirectory of patient information
+        # set json keys and path values
+        string_to_search_for = ''
+        json_key = ''
+        if datatofind == 'sleep':
+            string_to_search_for = 'sleep'
+            json_key = 'sleep'
+            json_key_2 = 'summary'
+        elif datatofind == 'step':
+            string_to_search_for = 'step'
+            json_key = 'activities-steps'
+            json_key_2 = "activities-steps-intraday"
+        elif datatofind == 'survey':
+            string_to_search_for = '_'
 
-    # path  --> list of subdirectories in data_1
-    def directNestList(path):
-        # type: (string) -> [string]
-        sleepfiles = []
-        fileList = [os.listdir(x) for x in directList(path)]
-        for sublist in fileList:
-            index_of_sleep_JSON = 0
-            ###
-            ### adjust for binary search later...will be inefficient after larger dataset introduced if not!#
-            ###
-            # search for string in file name
-            # can later be abstracted to include sleep, step, survey class
-            while index_of_sleep_JSON < len(sublist):
-                if sublist[index_of_sleep_JSON].find(string_to_search_for) == -1:
-                    # not found, increment index by one
-                    index_of_sleep_JSON += 1
-                else:
-                    break
-            sleepfiles.append(sublist[index_of_sleep_JSON])
-        return sleepfiles
+        # path  --> list of directories in data_1
+        def directList(path):
+            # type: (string) -> [string]
+            directoryList = [path+'/'+str(x) for x in os.listdir(path) if os.path.isdir(path + '/' + str(x))]
+            return directoryList
 
-    # create dictoionary
-    dictionaryOfDirectories = {}
-    # [directories];[files in directories] ---> {directory:files in directory}
-    # annotation of method:
-    # index 0 updated with index 0, {1:1}, {2:2}... {n:n}...
-    i = 0
-    # highest index will be len-1
-    while i < len(directList(path)):
-        dictionaryOfDirectories.update({directList(path)[i]: directNestList(path)[i]})
-        i += 1
-    ######for each data frame#####
-    # with dictionary of directories, for each key: take value and form file path
-    # {directory:files in directory} --> str(filepath)
-    dictionary_index = 0
-    list_of_json_files = []
-    while dictionary_index < len(dictionaryOfDirectories.keys()):
-        f = path + '/' + dictionaryOfDirectories.keys()[dictionary_index] + '/' + \
-            str(dictionaryOfDirectories.values()[dictionary_index])
-        list_of_json_files.append(f)
-        dictionary_index += 1
-    # [filepath] --> JSON data object
-    all_frames = []
-    # condition block if sleep or step here
-    # abstract to function later
-    if datatofind == 'survey':
-        df = []
-        for json_file in list_of_json_files:
-            json_to_parse = open(json_file).read()
-            data = json.loads(json_to_parse)
-            # data.key[0]: data.value[1][0], # key[1]: value[1][1], # key[2]: value[1][2]...# key[n]: value[1][n]
-            df.append(json_normalize(data))
-            # JSON --> [pd.DataFrame]
-        return pd.concat(df)
-    else:
+        # path  --> list of subdirectories in data_1
+        def directNestList(path):
+            # type: (string) -> [string]
+            sleepfiles = []
+            fileList = [os.listdir(x) for x in directList(path)]
+            for sublist in fileList:
+                index_of_sleep_JSON = 0
+                ###
+                ### adjust for binary search later...will be inefficient after larger dataset introduced if not!#
+                ###
+                # search for string in file name
+                # can later be abstracted to include sleep, step, survey class
+                while index_of_sleep_JSON < len(sublist):
+                    if sublist[index_of_sleep_JSON].find(string_to_search_for) == -1:
+                        # not found, increment index by one
+                        index_of_sleep_JSON += 1
+                    else:
+                        break
+                sleepfiles.append(sublist[index_of_sleep_JSON])
+            return sleepfiles
 
-        for json_file in list_of_json_files:
-            json_to_parse = open(json_file).read()
-            data = json.loads(json_to_parse)
-            dates = data.keys()
-            # normalize json survey via iteration over survey values
-            # JSON --> [pd.DataFrame]
+        # create dictoionary
+        dictionaryOfDirectories = {}
+        # [directories];[files in directories] ---> {directory:files in directory}
+        # annotation of method:
+        # index 0 updated with index 0, {1:1}, {2:2}... {n:n}...
+        i = 0
+        # highest index will be len-1
+        while i < len(directList(path)):
+            dictionaryOfDirectories.update({directList(path)[i]: directNestList(path)[i]})
+            i += 1
+        ######for each data frame#####
+        # with dictionary of directories, for each key: take value and form file path
+        # {directory:files in directory} --> str(filepath)
+        dictionary_index = 0
+        list_of_json_files = []
+        while dictionary_index < len(dictionaryOfDirectories.keys()):
+            f = dictionaryOfDirectories.keys()[dictionary_index] + '/' + \
+                str(dictionaryOfDirectories.values()[dictionary_index])
+            list_of_json_files.append(f)
+            dictionary_index += 1
+        # [filepath] --> JSON data object
+        all_frames = []
+        # condition block if sleep or step here
+        # abstract to function later
+        if datatofind == 'survey':
             df = []
-            # insert ID by traversing dictionary of directory/files again
-            for date in dates:
-                # create the dataframe for each date
-                df.append(json_normalize(data[date], json_key, json_key_2))
-            singleframe = pd.concat(df)
-            singleframe['id'] = json_file
-            all_frames.append(singleframe)
-        return pd.concat(all_frames)
+            for json_file in list_of_json_files:
+                json_to_parse = open(json_file).read()
+                data = json.loads(json_to_parse)
+                # data.key[0]: data.value[1][0], # key[1]: value[1][1], # key[2]: value[1][2]...# key[n]: value[1][n]
+                df.append(json_normalize(data))
 
+                # JSON --> [pd.DataFrame]
+            return pd.concat(df)
+
+        else:
+
+            for json_file in list_of_json_files:
+                json_to_parse = open(json_file).read()
+                data = json.loads(json_to_parse)
+                dates = data.keys()
+                # normalize json survey via iteration over survey values
+                # JSON --> [pd.DataFrame]
+                df = []
+                # insert ID by traversing dictionary of directory/files again
+                for date in dates:
+                    # create the dataframe for each date
+                    df.append(json_normalize(data[date], json_key, json_key_2))
+                singleframe = pd.concat(df)
+                singleframe['id'] = json_file
+                all_frames.append(singleframe)
+
+            return pd.concat(all_frames)
+
+table1 = Table()
+print table1.createdataframe(fpath, 'sleep')
 
 # data =  createdataframe(path, datatofind = str(where datatofind =='sleep'|'step'|'survey')
 # idbl = data[data['id']=='/Users/Dylan/Dropbox/FitBit/data_1/BLqS60/BLqS60-sleep-data.json']
@@ -237,4 +244,76 @@ for each in step_data['id']:
     matches = re.findall(regex, test_str)
     ID_array.append(matches[3])
 step_data['ID'] = ID_array
-print step_data
+
+
+# last minute graphing
+# I know triple quotes arent supposed to be used for block comment
+'''ID_array = []
+for each in sleep_data['id']:
+    regex = r"(?<=\W)[a-zA-Z0-9]{6}"
+    test_str = each
+    matches = re.findall(regex, test_str)
+    ID_array.append(matches[3])
+sleep_data['ID'] = ID_array
+
+
+
+
+
+
+step = step_data[step_data['ID'] == 'BLqS60']
+sleep = sleep_data[sleep_data['ID']=='BLqS60']
+#survey = survey_data[survey_data['ID'] == 'BLqS60']
+survey = survey_data.reset_index()
+print step
+print sleep
+print survey
+
+timeframes=[]
+answers = []
+for each in survey.ix[0]['UChicagoIBD/']:
+    timeframes.append(each['TimeCompleted'])
+    answers.append(each['Value'])
+
+
+import time
+
+
+datetimes = map(lambda x: time.strftime('%Y-%m-%d', time.localtime(x/1000)), timeframes)
+sleepepochs = []
+from datetime import datetime
+import time
+from calendar import timegm
+
+sleeptime = sleep['dateOfSleep'].values
+for each in sleeptime:
+    utc_time = time.strptime(each, '%Y-%m-%d')
+    epoch_time = timegm(utc_time)*1000
+    sleepepochs.append(epoch_time)
+
+sleepeffic = sleep['efficiency'].values
+
+
+
+
+import numpy as np
+import bokeh.plotting as bp
+from bokeh.models import HoverTool
+bp.output_file('test.html')
+
+fig = bp.figure()
+x1 = timeframes
+x2 = sleepepochs
+y1 = [float(i)/max(answers) for i in answers]
+y2 = [float(i)/max(sleepeffic) for i in sleepeffic]
+s1 = fig.scatter(x=x1,y=y1,color='#0000ff',legend='='')
+s2 = fig.scatter(x=x2,y=y2,color='#ff0000',legend='')
+bp.show(fig)
+
+
+print x2
+
+print "x"
+print x1
+print x2
+'''
