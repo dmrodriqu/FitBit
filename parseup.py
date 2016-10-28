@@ -34,6 +34,7 @@ class Table:
 
     def __init__(self):
         self.listofframes = []
+        self.dataType = ''
 
     def createdataframe(self, path, datatofind):
         # type: (string, string) -> np.dataFrame
@@ -43,13 +44,16 @@ class Table:
         json_key = ''
         if datatofind == 'sleep':
             string_to_search_for = 'sleep'
+            self.dataType = 'sleep'
             json_key = 'sleep'
             json_key_2 = 'summary'
         elif datatofind == 'step':
+            self.dataType = 'step'
             string_to_search_for = 'step'
             json_key = 'activities-steps'
             json_key_2 = "activities-steps-intraday"
         elif datatofind == 'survey':
+            self.dataType = 'survey'
             string_to_search_for = '_'
 
         # path  --> list of directories in data_1
@@ -104,15 +108,13 @@ class Table:
         # condition block if sleep or step here
         # abstract to function later
         if datatofind == 'survey':
-            df = []
             for json_file in list_of_json_files:
                 json_to_parse = open(json_file).read()
                 data = json.loads(json_to_parse)
                 # data.key[0]: data.value[1][0], # key[1]: value[1][1], # key[2]: value[1][2]...# key[n]: value[1][n]
-                df.append(json_normalize(data))
+                self.listofframes.append(json_normalize(data))
 
                 # JSON --> [pd.DataFrame]
-            return pd.concat(df)
 
         else:
 
@@ -134,18 +136,23 @@ class Table:
     def concatinateDataFrames(self):
         return pd.concat(self.listofframes).reset_index()
 
+
+    def get_gps(self, tableFrame):
+        # type: (np.dataFrame) -> [{'string':int, 'string':{'string':float, 'string':float}}]
+        location_dictionary_array = []
+        i = 0
+        while i < len(df):
+            location_dictionary_array.append([x for x in tableFrame['location']][i])
+            i += 1
+        return location_dictionary_array
+
+
 table1 = Table()
-table1.createdataframe(fpath, 'sleep')
-print table1.concatinateDataFrames()
+table1.createdataframe(fpath, 'survey')
+frame = table1.concatinateDataFrames()
+print table1.get_gps(frame)
 
 
-# data =  createdataframe(path, datatofind = str(where datatofind =='sleep'|'step'|'survey')
-# idbl = data[data['id']=='/Users/Dylan/Dropbox/FitBit/data_1/BLqS60/BLqS60-sleep-data.json']
-
-# examples
-#step_data = createdataframe(path, 'step')
-#sleep_data = createdataframe(path, 'sleep')
-#survey_data = createdataframe(path, 'survey')
 
 
 
