@@ -12,7 +12,7 @@ from pandas.io.json import json_normalize
 
 # path to fitbit data here
 
-path = '/Users/Dylan/Dropbox/FitBit/data_20161012'
+fpath = '/Users/Dylan/Dropbox/FitBit/data_20161012'
 
 
 # data organized in the following manner:
@@ -31,6 +31,9 @@ path = '/Users/Dylan/Dropbox/FitBit/data_20161012'
 # ----survey_json_file
 
 class Table:
+
+    def __init__(self):
+        self.listofframes = []
 
     def createdataframe(self, path, datatofind):
         # type: (string, string) -> np.dataFrame
@@ -97,7 +100,7 @@ class Table:
             list_of_json_files.append(f)
             dictionary_index += 1
         # [filepath] --> JSON data object
-        all_frames = []
+        #self.listofframes = []
         # condition block if sleep or step here
         # abstract to function later
         if datatofind == 'survey':
@@ -126,20 +129,23 @@ class Table:
                     df.append(json_normalize(data[date], json_key, json_key_2))
                 singleframe = pd.concat(df)
                 singleframe['id'] = json_file
-                all_frames.append(singleframe)
+                self.listofframes.append(singleframe)
 
-            return pd.concat(all_frames)
+    def concatinateDataFrames(self):
+        return pd.concat(self.listofframes).reset_index()
 
 table1 = Table()
-print table1.createdataframe(fpath, 'sleep')
+table1.createdataframe(fpath, 'sleep')
+print table1.concatinateDataFrames()
+
 
 # data =  createdataframe(path, datatofind = str(where datatofind =='sleep'|'step'|'survey')
 # idbl = data[data['id']=='/Users/Dylan/Dropbox/FitBit/data_1/BLqS60/BLqS60-sleep-data.json']
 
 # examples
-step_data = createdataframe(path, 'step')
-sleep_data = createdataframe(path, 'sleep')
-survey_data = createdataframe(path, 'survey')
+#step_data = createdataframe(path, 'step')
+#sleep_data = createdataframe(path, 'sleep')
+#survey_data = createdataframe(path, 'survey')
 
 
 
