@@ -193,16 +193,52 @@ class Table:
             index_of_n += 1
         return times, velocities
 
+    #add method for psqi
+
+    #add method for SIBDQ
+
+    #add method for VAS
+
+    #add method for sleep data
+
+    def sleepMinuteData(self, dataframe):
+        # function's current form will append ALL values of ALL IDs
+        # while loop to generate graphs.
+        # create cond for time slept under<n minutes to append and impute '3' or drop row
+        i = 0
+        # another function here to graph
+        # formatted for graphing
+
+        ##################
+        # graphing sleep:
+        # p.quad
+        # top sleepDataList
+        # bottom map(lambda x: x-1, sleepDataList)
+        # left timeDataList
+        # right timeDataList[1:], may need to append a 1 minute interval for the last data point just for graph.
+        ##################
+
+        sleepDataList = []
+        timeDataList = []
+        # traverse all rows in sleep minute series
+        while i < len(dataframe):
+            for sleepData in dataframe['minuteData'][i]:
+                sleepDataList.append(sleepData[u'value'])
+                timeDataList.append(sleepData[u'dateTime'])
+            i += 1
+        return sleepDataList, timeDataList
+
+
 
 table1 = Table()
-table1.parseJSON(fpath, 'survey')
+table1.parseJSON(fpath, 'sleep')
 frame = table1.getDataFrame()
-gps = table1.getGPS(frame)
-gps1 = table1.gps_rdt(gps, 0)
+#gps = table1.getGPS(frame)
+#gps1 = table1.gps_rdt(gps, 0)
 #distance1 = table1.gps_to_distance(gps1,0)
-euclidiangps1 = table1.euclid_slope_lat_long(gps1[0], gps1[1], gps1[2])
-print euclidiangps1
-
+#euclidiangps1 = table1.euclid_slope_lat_long(gps1[0], gps1[1], gps1[2])
+#print euclidiangps1
+print table1.sleepMinuteData(frame)[0]
 
 
 # data = euclid_slope_lat_long(euclidlist[0], euclidlist[1], euclidlist[2])
@@ -234,13 +270,13 @@ import numpy as np
 # show(p)
 
 # get IDs from filepaths, create new colums for patient ID
-ID_array = []
+'''ID_array = []
 for each in step_data['id']:
     regex = r"(?<=\W)[a-zA-Z0-9]{6}"
     test_str = each
     matches = re.findall(regex, test_str)
     ID_array.append(matches[3])
-step_data['ID'] = ID_array
+step_data['ID'] = ID_array'''
 
 # last minute graphing
 '''ID_array = []
