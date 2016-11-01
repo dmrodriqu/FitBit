@@ -110,6 +110,7 @@ class Table:
             for json_file in list_of_json_files:
                 json_to_parse = open(json_file).read()
                 data = json.loads(json_to_parse)
+                data['id'] = json_file
                 # data.key[0]: data.value[1][0], # key[1]: value[1][1], # key[2]: value[1][2]...# key[n]: value[1][n]
                 self.listofframes.append(json_normalize(data))
                 # JSON --> [pd.DataFrame]
@@ -132,7 +133,16 @@ class Table:
                 self.listofframes.append(singleframe)
 
     def getDataFrame(self):
-        return pd.concat(self.listofframes).reset_index()
+        contatenatedFrames = pd.concat(self.listofframes).reset_index()
+        ID_array = []
+        for each in contatenatedFrames['id']:
+            regex = r"(?<=\W)[a-zA-Z0-9]{6}"
+            test_str = each
+            matches = re.findall(regex, test_str)
+            ID_array.append(matches[2])
+        contatenatedFrames['ID'] = ID_array
+        contatenatedFrames = contatenatedFrames.drop('id',1)
+        return contatenatedFrames
 
     def getGPS(self, tableFrame):
         # type: (np.dataFrame) -> [{'string':int, 'string':{'string':float, 'string':float}}]
@@ -195,6 +205,9 @@ class Table:
 
     #add method for psqi
 
+    #def getPSQI(self, frame):
+
+
     #add method for SIBDQ
 
     #add method for VAS
@@ -230,15 +243,19 @@ class Table:
 
 
 
-table1 = Table()
-table1.parseJSON(fpath, 'sleep')
-frame = table1.getDataFrame()
+sleepTable = Table()
+sleepTable.parseJSON(fpath, 'sleep')
+sleepFrame = sleepTable.getDataFrame()
+print sleepFrame
 #gps = table1.getGPS(frame)
 #gps1 = table1.gps_rdt(gps, 0)
 #distance1 = table1.gps_to_distance(gps1,0)
 #euclidiangps1 = table1.euclid_slope_lat_long(gps1[0], gps1[1], gps1[2])
 #print euclidiangps1
-print table1.sleepMinuteData(frame)[0]
+surveyTable = Table()
+surveyTable.parseJSON(fpath,'survey')
+surveyFrame = surveyTable.getDataFrame()
+print surveyFrame
 
 
 # data = euclid_slope_lat_long(euclidlist[0], euclidlist[1], euclidlist[2])
