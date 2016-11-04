@@ -79,27 +79,6 @@ def createSleepColumns(originalDataFrame, seriesToExpand):
 
     return pd.concat(listOfExpandedFrames)
 
-def createStepColumns(originalDataFrame, seriesToExpand):
-    indexCount = 0
-    listOfExpandedFrames = []
-    for row in seriesToExpand:
-        if type(row) is None:
-            print 'none'
-            indexCount += 1
-        else:
-            tempframe = pd.DataFrame.from_dict(row)
-            columncount = 1
-            print tempframe
-            while columncount < len(list(tempframe.columns.values)):
-                columnToParse = tempframe.ix[:, columncount]
-                for jsonRow in columnToParse:
-                    totalSleepFrame = pd.DataFrame.from_dict(jsonRow[0])
-                    totalSleepFrame['ID'] = originalDataFrame.ix[indexCount]['ID']
-                    listOfExpandedFrames.append(totalSleepFrame)
-                    columncount += 1
-            indexCount += 1
-
-    return pd.concat(listOfExpandedFrames)
 
 #works!
 print createSleepColumns(table, concatenatedSleepFrames)
