@@ -12,7 +12,7 @@ from pandas.io.json import json_normalize
 
 # path to fitbit data here
 
-fpath = '/Users/Dylan/Dropbox/FitBit/data_20161012'
+fpath = '/Users/Dylan/Dropbox/FitBit/Users/volcs0/work/bin/data_20161031/UChicagoIBD_data.json'
 
 
 # data organized in the following manner:
@@ -132,6 +132,15 @@ class Table:
                 singleframe['id'] = json_file
                 self.listofframes.append(singleframe)
 
+    def parseJsonFile(self, fpath):
+        json_to_parse = open(fpath).read()
+        data = json.loads(json_to_parse)
+        subjectIDs = data.keys()
+
+        fullFrame = pd.read_json(json_to_parse,
+                                 orient = 'index')
+        return fullFrame
+
     def getDataFrame(self):
         contatenatedFrames = pd.concat(self.listofframes).reset_index()
         ID_array = []
@@ -242,20 +251,31 @@ class Table:
         return sleepDataList, timeDataList
 
 
+test = Table()
+print test.parseJsonFile(fpath)
 
-sleepTable = Table()
-sleepTable.parseJSON(fpath, 'sleep')
-sleepFrame = sleepTable.getDataFrame()
-print sleepFrame
+#sleepTable = Table()
+#sleepTable.parseJSON(fpath, 'sleep')
+#sleepFrame = sleepTable.getDataFrame()
+#print sleepFrame
 #gps = table1.getGPS(frame)
 #gps1 = table1.gps_rdt(gps, 0)
 #distance1 = table1.gps_to_distance(gps1,0)
 #euclidiangps1 = table1.euclid_slope_lat_long(gps1[0], gps1[1], gps1[2])
 #print euclidiangps1
-surveyTable = Table()
-surveyTable.parseJSON(fpath,'survey')
-surveyFrame = surveyTable.getDataFrame()
-print surveyFrame
+#surveyTable = Table()
+#surveyTable.parseJSON(fpath,'survey')
+#surveyFrame = surveyTable.getDataFrame()
+
+#print surveyFrame
+
+
+#workflow for PSQI, to abstract -->
+#psqiFrame = surveyFrame.ix[:,0:18]
+#for psqiQuestions in psqiFrame:
+#    print psqiFrame[psqiQuestions].values[3]
+
+#print psqiFrame
 
 
 # data = euclid_slope_lat_long(euclidlist[0], euclidlist[1], euclidlist[2])
