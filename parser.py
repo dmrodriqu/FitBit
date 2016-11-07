@@ -20,6 +20,7 @@ class Table:
         self.dataType = ''
         self.i = 0
         self.listOfExpandedFrames = []
+        self.stepOrHeartFramesToConcatenate = []
 
     def parseJsonFile(self, path):
         json_to_parse = open(path).read()
@@ -65,64 +66,24 @@ class Table:
 
         return pd.concat(self.listOfExpandedFrames).reset_index()
 
+    def createStepOrHeartColumns(self, originalDataFrame, seriesToExpand):
+        stepFramesToConcatenate = []
+        indexCount = 0
+        while indexCount < len(seriesToExpand):
+            for x in seriesToExpand:
+                if type(x) is list:
+                    stepFrameToModify = pd.DataFrame.from_records(x)
+                    stepFrameToModify['ID'] = originalDataFrame.ix[indexCount]['ID']
+                    self.stepOrHeartFramesToConcatenate.append(stepFrameToModify)
+                else:
+                    pass
+                indexCount += 1
+        return pd.concat(self.stepOrHeartFramesToConcatenate).reset_index()
+
 
 new = Table()
 table = new.parseJsonFile(fpath)
-sleepRows = new.recursiveRows(table, 'Sleep')
-print new.createSleepColumns(table, sleepRows)
+# Heart, Steps, Sleep
+sleepRows = new.recursiveRows(table, 'Steps')
+print new.createStepOrHeartColumns(table, sleepRows)
 
-#print table
-
-#print table['Fitbit']
-i = 0
-sleepFrame = []
-
-
-#concatenatedSleepFrames = recursiveRows(table, 'Sleep')
-#concatenatedStepFrames = recursiveRows(table, 'Step')
-
-def createSleepColumns(originalDataFrame, seriesToExpand):
-    indexCount = 0
-    listOfExpandedFrames = []
-    for row in seriesToExpand:
-        if type(row) is None:
-            print 'none'
-            indexCount += 1
-        else:
-            tempframe = pd.DataFrame.from_dict(row)
-            columncount = 1
-            while columncount < len(list(tempframe.columns.values)):
-                columnToParse = tempframe.ix[:, columncount]
-                for jsonRow in columnToParse:
-                    totalSleepFrame = pd.DataFrame.from_dict(jsonRow[0])
-                    totalSleepFrame['ID'] = originalDataFrame.ix[indexCount]['ID']
-                    listOfExpandedFrames.append(totalSleepFrame)
-                    columncount += 1
-            indexCount += 1
-
-    return pd.concat(listOfExpandedFrames).reset_index()
-
-
-
-#works!
-#print createSleepColumns(table, concatenatedSleepFrames)
-#print concatenatedStepFrames
-
-
-#print concatenatedStepFrames
-def createStepOrHeartColumns(originalDataFrame, seriesToExpand):
-    stepFramesToConcatenate = []
-    indexCount = 0
-    while indexCount < len(seriesToExpand):
-        for x in seriesToExpand:
-            if type(x) is list:
-                stepFrameToModify = pd.DataFrame.from_records(x)
-                stepFrameToModify['ID'] = originalDataFrame.ix[indexCount]['ID']
-                stepFramesToConcatenate.append(stepFrameToModify)
-            else:
-                pass
-            indexCount += 1
-    return pd.concat(stepFramesToConcatenate).reset_index()
-
-#print createStepColumns(table, concatenatedStepFrames)
-#print createSleepColumns(table,concatenatedSleepFrames)
