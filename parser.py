@@ -34,10 +34,7 @@ table = table.reset_index()
 #print table['Fitbit']
 i = 0
 sleepSeries = []
-
 sleepFrame = []
-
-
 def recursiveRows (dataFrame, dataType):
     if len(dataFrame)==0:
         return pd.Series(sleepFrame)
@@ -55,7 +52,7 @@ def recursiveRows (dataFrame, dataType):
             #sleepSeries.append(litmus[u'Sleep'])
             return recursiveRows(dataFrame[1:], dataType)
 
-concatenatedSleepFrames = recursiveRows(table, 'Sleep')
+#concatenatedSleepFrames = recursiveRows(table, 'Sleep')
 concatenatedStepFrames = recursiveRows(table, 'Steps')
 
 def createSleepColumns(originalDataFrame, seriesToExpand):
@@ -85,8 +82,20 @@ def createSleepColumns(originalDataFrame, seriesToExpand):
 #print createSleepColumns(table, concatenatedSleepFrames)
 #print concatenatedStepFrames
 
-for x in concatenatedStepFrames:
-    if type(x) is list:
-        print pd.DataFrame.from_records(x)
-    else:
-        pass
+
+print concatenatedStepFrames
+def createStepColumns(originalDataFrame, seriesToExpand):
+    stepFramesToConcatenate = []
+    indexCount = 0
+    while indexCount < len(seriesToExpand):
+        for x in seriesToExpand:
+            if type(x) is list:
+                stepFrameToModify = pd.DataFrame.from_records(x)
+                stepFrameToModify['ID'] = originalDataFrame.ix[indexCount]['ID']
+                stepFramesToConcatenate.append(stepFrameToModify)
+            else:
+                pass
+            indexCount += 1
+    return pd.concat(stepFramesToConcatenate).reset_index()
+
+print createStepColumns(table, concatenatedStepFrames)
