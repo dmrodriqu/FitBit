@@ -7,10 +7,6 @@ import math
 from pandas.io.json import json_normalize
 
 
-## note ##
-
-# new method to extract updated data stream. Tested with sleep data
-# abstraction upcomming
 
 
 
@@ -33,7 +29,6 @@ table = table.reset_index()
 
 #print table['Fitbit']
 i = 0
-sleepSeries = []
 sleepFrame = []
 def recursiveRows (dataFrame, dataType):
     if len(dataFrame)==0:
@@ -43,17 +38,15 @@ def recursiveRows (dataFrame, dataType):
             row = dataFrame[:]
             litmus = row['Fitbit']
             sleepFrame.append(litmus.values[0][dataType])
-            #sleepSeries.append(litmus[u'Sleep'])
             return recursiveRows(dataFrame[1:], dataType)
         else:
             row = dataFrame[:-(len(dataFrame))+1]
             litmus = row['Fitbit']
             sleepFrame.append(litmus.values[0][dataType])
-            #sleepSeries.append(litmus[u'Sleep'])
             return recursiveRows(dataFrame[1:], dataType)
 
 #concatenatedSleepFrames = recursiveRows(table, 'Sleep')
-concatenatedStepFrames = recursiveRows(table, 'Steps')
+concatenatedStepFrames = recursiveRows(table, 'Step')
 
 def createSleepColumns(originalDataFrame, seriesToExpand):
     indexCount = 0
@@ -74,7 +67,7 @@ def createSleepColumns(originalDataFrame, seriesToExpand):
                     columncount += 1
             indexCount += 1
 
-    return pd.concat(listOfExpandedFrames)
+    return pd.concat(listOfExpandedFrames).reset_index()
 
 
 
@@ -83,8 +76,8 @@ def createSleepColumns(originalDataFrame, seriesToExpand):
 #print concatenatedStepFrames
 
 
-print concatenatedStepFrames
-def createStepColumns(originalDataFrame, seriesToExpand):
+#print concatenatedStepFrames
+def createStepOrHeartColumns(originalDataFrame, seriesToExpand):
     stepFramesToConcatenate = []
     indexCount = 0
     while indexCount < len(seriesToExpand):
@@ -99,3 +92,4 @@ def createStepColumns(originalDataFrame, seriesToExpand):
     return pd.concat(stepFramesToConcatenate).reset_index()
 
 print createStepColumns(table, concatenatedStepFrames)
+#print createSleepColumns(table,concatenatedSleepFrames)
