@@ -80,9 +80,13 @@ def createSleepColumns(originalDataFrame, seriesToExpand):
     return pd.concat(listOfExpandedFrames)
 
 
+
 #works!
-print createSleepColumns(table, concatenatedSleepFrames)
+#print createSleepColumns(table, concatenatedSleepFrames)
+#print concatenatedStepFrames
 
-
-
-
+for x in concatenatedStepFrames:
+    if type(x) is list:
+        print pd.DataFrame.from_records(x)
+    else:
+        pass
