@@ -20,7 +20,8 @@ class Table:
         self.dataType = ''
         self.i = 0
         self.listOfExpandedFrames = []
-        self.stepOrHeartFramesToConcatenate = []
+        self.stepFramesToConcatenate = []
+        self.heartFramesToConcatenate = []
 
     def parseJsonFile(self, path):
         json_to_parse = open(path).read()
@@ -66,24 +67,33 @@ class Table:
 
         return pd.concat(self.listOfExpandedFrames).reset_index()
 
-    def createStepOrHeartColumns(self, originalDataFrame, seriesToExpand):
-        stepFramesToConcatenate = []
+    def createStepOrHeartColumns(self, originalDataFrame, seriesToExpand, seriesName):
         indexCount = 0
         while indexCount < len(seriesToExpand):
             for x in seriesToExpand:
                 if type(x) is list:
                     stepFrameToModify = pd.DataFrame.from_records(x)
                     stepFrameToModify['ID'] = originalDataFrame.ix[indexCount]['ID']
-                    self.stepOrHeartFramesToConcatenate.append(stepFrameToModify)
+                    if seriesName == 'Steps':
+                        self.stepFramesToConcatenate.append(stepFrameToModify)
+                    if seriesName == 'Heart':
+                        self.heartFramesToConcatenate.append(stepFrameToModify)
                 else:
                     pass
                 indexCount += 1
-        return pd.concat(self.stepOrHeartFramesToConcatenate).reset_index()
+        if len(self.stepFramesToConcatenate)> 0:
+            return pd.concat(self.stepFramesToConcatenate).reset_index()
+        if len(self.heartFramesToConcatenate)>0:
+            return pd.concat(self.heartFramesToConcatenate).reset_index()
 
 
 new = Table()
 table = new.parseJsonFile(fpath)
 # Heart, Steps, Sleep
-sleepRows = new.recursiveRows(table, 'Steps')
-print new.createStepOrHeartColumns(table, sleepRows)
+heartrows = new.recursiveRows(table, 'Heart')
+print new.createStepOrHeartColumns(table, heartrows, 'Heart')
+steprows = new.recursiveRows(table, 'Steps')
+#print steprows
+print new.createStepOrHeartColumns(table, steprows, 'Steps')
 
+print len(new.stepFramesToConcatenate)
