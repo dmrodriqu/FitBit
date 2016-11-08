@@ -9,42 +9,38 @@ from pandas.io.json import json_normalize
 fpath = '/Users/Dylan/Dropbox/FitBit/UChicagoIBD_data.json'
 
 def parseJsonFile(path):
+    # type: (String) -> (DataFrame)
     json_to_parse = open(path).read()
-    data = json.loads(json_to_parse)
-    subjectIDs = data.keys()
     fullFrame = pd.read_json(json_to_parse, orient='index')
     fullFrame['ID'] = fullFrame.index
     return fullFrame.reset_index()
 
-parsedJson = parseJsonFile(fpath)
 
 class Table:
 
     def __init__(self):
         self.sleepFrame = []
-        self.dataType = ''
-        self.i = 0
         self.listOfExpandedFrames = []
-        self.stepFramesToConcatenate = []
-        self.heartFramesToConcatenate = []
+        self.FramesToConcatenate = []
 
-
-    def recursiveRows(self, dataFrame, dataType):
+    def recursiveRows(self, dataFrame, column,  dataType):
+        # type: (DataFrame) -> (Series)
         if len(dataFrame) == 0:
             return pd.Series(self.sleepFrame)
         else:
             if len(dataFrame) == 1:
                 row = dataFrame[:]
-                litmus = row['Fitbit']
+                litmus = row[column]
                 self.sleepFrame.append(litmus.values[0][dataType])
                 return self.recursiveRows(dataFrame[1:], dataType)
             else:
                 row = dataFrame[:-(len(dataFrame)) + 1]
-                litmus = row['Fitbit']
+                litmus = row[column]
                 self.sleepFrame.append(litmus.values[0][dataType])
                 return self.recursiveRows(dataFrame[1:], dataType)
 
     def createSleepColumns(self, originalDataFrame, seriesToExpand):
+        # type: (Series) -> (DataFrame)
         indexCount = 0
         for row in seriesToExpand:
             if type(row) is None:
@@ -65,38 +61,37 @@ class Table:
         return pd.concat(self.listOfExpandedFrames).reset_index()
 
     def createStepOrHeartColumns(self, originalDataFrame, seriesToExpand):
-        stepFramesToConcatenate = []
+        # type: (Series) -> (DataFrame)
         indexCount = 0
         while indexCount < len(seriesToExpand):
             for x in seriesToExpand:
                 if type(x) is list:
                     stepFrameToModify = pd.DataFrame.from_records(x)
                     stepFrameToModify['ID'] = originalDataFrame.ix[indexCount]['ID']
-                    self.stepFramesToConcatenate.append(stepFrameToModify)
+                    self.FramesToConcatenate.append(stepFrameToModify)
                 else:
                     pass
                 indexCount += 1
-        return pd.concat(self.stepFramesToConcatenate).reset_index()
-
+        return pd.concat(self.FramesToConcatenate).reset_index()
 
 
 def concatStepHeartSleep(fileToJson):
     parsedJson = parseJsonFile(fileToJson)
     # Heart
     heartTable = Table()
-    heartRows = heartTable.recursiveRows(parsedJson, 'Heart')
+    heartRows = heartTable.recursiveRows(parsedJson, 'Fitbit', 'Heart')
     heartDataFrame = heartTable.createStepOrHeartColumns(parsedJson, heartRows)
     # Steps
     sleepTable = Table()
-    sleepRows = sleepTable.recursiveRows(parsedJson, 'Sleep')
+    sleepRows = sleepTable.recursiveRows(parsedJson, 'Fitbit', 'Sleep')
     sleepDataFrame = sleepTable.createSleepColumns(parsedJson, sleepRows)
     # Sleep
     stepTable = Table()
-    stepsRows = stepTable.recursiveRows(parsedJson, 'Steps')
+    stepsRows = stepTable.recursiveRows(parsedJson, 'Fitbit', 'Steps')
     stepDataFrame = sleepTable.createStepOrHeartColumns(parsedJson, stepsRows)
 
     frame1 = pd.merge(heartDataFrame,sleepDataFrame, on = 'ID')
     return frame1
 
-print concatStepHeartSleep(fpath)
+
 
