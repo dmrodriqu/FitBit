@@ -102,8 +102,11 @@ def createPsqiTable(filepath):
     while i < len(arrayOfQuestions):
         question = Table()
         psqirow = question.recursiveRows(originalDataFrame, 'Litmus', str(arrayOfQuestions[i]))
+        expandedPsqi = question.createStepOrHeartColumns(originalDataFrame, psqirow)
+        expandedPsqi['PsqiQuestionID'] = i
+        print expandedPsqi
         arrayOfPsqiFrames.append(psqirow)
-        print psqirow
+
         i += 1
     print arrayOfPsqiFrames
 
