@@ -89,36 +89,23 @@ class Table:
         return pd.concat(self.FramesToConcatenate).reset_index()
 
 
-def concatStepHeartSleep(fileToJson):
-    parsedJson = parseJsonFile(fileToJson)
-    psqiQuestion = map(lambda x: x + 1, range(10))
-    psqiQuestionList = []
-    for x in psqiQuestion:
-        psqiQuestionList.append("UChicagoIBD/PSQI/Q%s" % x)
-    # Heart
-    #heartTable = Table()
-    #heartRows = heartTable.recursiveRows(parsedJson, 'Fitbit', 'Heart')
-    #heartDataFrame = heartTable.createStepOrHeartColumns(parsedJson, heartRows)
-    # Steps
-    #sleepTable = Table()
-    #sleepRows = sleepTable.recursiveRows(parsedJson, 'Fitbit', 'Sleep')
-    #sleepDataFrame = sleepTable.createSleepColumns(parsedJson, sleepRows)
-    # Sleep
-    #stepTable = Table()
-    #stepsRows = stepTable.recursiveRows(parsedJson, 'Fitbit', 'Steps')
-    #stepDataFrame = sleepTable.createStepOrHeartColumns(parsedJson, stepsRows)
-
-    #frame1 = pd.merge(heartDataFrame,sleepDataFrame, on = 'ID')
-    newtable = Table()
-    frametomerge = []
-    for x in psqiQuestionList:
-        newrows = newtable.recursiveRows(parsedJson, 'Litmus', x)
-        print newrows
-    #    frametomerge.append(psqi1)
-    # fib merging:
-    # merge n-1, n
+def createPsqiTable(filepath):
+    originalDataFrame = parseJsonFile(filepath)
+    arrayOfQuestions = []
+    questiondigits = map(lambda x: x+1, (range(10)))
+    for digit in questiondigits:
+        questionString = "UChicagoIBD/PSQI/Q%s" % digit
+        arrayOfQuestions.append(questionString)
+    print arrayOfQuestions
+    i = 0
+    arrayOfPsqiFrames = []
+    while i < len(arrayOfQuestions):
+        question = Table()
+        psqirow = question.recursiveRows(originalDataFrame, 'Litmus', str(arrayOfQuestions[i]))
+        arrayOfPsqiFrames.append(psqirow)
+        print psqirow
+        i += 1
+    print arrayOfPsqiFrames
 
 
-
-
-print concatStepHeartSleep(fpath)
+print createPsqiTable(fpath)
