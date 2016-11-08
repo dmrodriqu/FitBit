@@ -6,12 +6,7 @@ import datetime
 import math
 from pandas.io.json import json_normalize
 
-
-
-
-
 fpath = '/Users/Dylan/Dropbox/FitBit/UChicagoIBD_data.json'
-
 
 def parseJsonFile(path):
     json_to_parse = open(path).read()
@@ -69,7 +64,7 @@ class Table:
 
         return pd.concat(self.listOfExpandedFrames).reset_index()
 
-    def createStepOrHeartColumns(self, originalDataFrame, seriesToExpand, seriesName):
+    def createStepOrHeartColumns(self, originalDataFrame, seriesToExpand):
         stepFramesToConcatenate = []
         indexCount = 0
         while indexCount < len(seriesToExpand):
@@ -77,36 +72,31 @@ class Table:
                 if type(x) is list:
                     stepFrameToModify = pd.DataFrame.from_records(x)
                     stepFrameToModify['ID'] = originalDataFrame.ix[indexCount]['ID']
-                    if seriesName == 'Steps':
-                        self.stepFramesToConcatenate.append(stepFrameToModify)
-                    if seriesName == 'Heart':
-                        self.heartFramesToConcatenate.append(stepFrameToModify)
+                    self.stepFramesToConcatenate.append(stepFrameToModify)
                 else:
                     pass
                 indexCount += 1
-        if len(self.stepFramesToConcatenate)> 0:
-            return pd.concat(self.stepFramesToConcatenate).reset_index()
-        elif len(self.heartFramesToConcatenate)>0:
-            return pd.concat(self.heartFramesToConcatenate).reset_index()
+        return pd.concat(self.stepFramesToConcatenate).reset_index()
 
 
 
 def concatStepHeartSleep(fileToJson):
+    parsedJson = parseJsonFile(fileToJson)
     # Heart
     heartTable = Table()
-    parsedJsonforHeartTable = parsedJson
-    heartRows = heartTable.recursiveRows(parsedJsonforHeartTable, 'Heart')
-    print heartRows
+    heartRows = heartTable.recursiveRows(parsedJson, 'Heart')
+    heartDataFrame = heartTable.createStepOrHeartColumns(parsedJson, heartRows)
     # Steps
     sleepTable = Table()
-    parsedJsonForSleepTable = parsedJson
-    sleepRows = sleepTable.recursiveRows(parsedJsonForSleepTable, 'Sleep')
-    print sleepRows
+    sleepRows = sleepTable.recursiveRows(parsedJson, 'Sleep')
+    sleepDataFrame = sleepTable.createSleepColumns(parsedJson, sleepRows)
     # Sleep
     stepTable = Table()
-    parsedJsonforStepTable = parsedJson
-    stepsRows = stepTable.recursiveRows(parsedJsonforStepTable, 'Steps')
-    print stepsRows
+    stepsRows = stepTable.recursiveRows(parsedJson, 'Steps')
+    stepDataFrame = sleepTable.createStepOrHeartColumns(parsedJson, stepsRows)
 
-concatStepHeartSleep(fpath)
+    frame1 = pd.merge(heartDataFrame,sleepDataFrame, on = 'ID')
+    return frame1
+
+print concatStepHeartSleep(fpath)
 
