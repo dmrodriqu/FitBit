@@ -22,22 +22,36 @@ class Table:
         self.sleepFrame = []
         self.listOfExpandedFrames = []
         self.FramesToConcatenate = []
+        self.recursiveCount = 0
+        self.dframeLen = 0
 
     def recursiveRows(self, dataFrame, column,  dataType):
         # type: (DataFrame) -> (Series)
-        if len(dataFrame) == 0:
-            return pd.Series(self.sleepFrame)
-        else:
-            if len(dataFrame) == 1:
-                row = dataFrame[:]
-                litmus = row[column]
-                self.sleepFrame.append(litmus.values[0][dataType])
-                return self.recursiveRows(dataFrame[1:], dataType)
+
+        if self.recursiveCount == 0:
+            self.dframeLen = len(dataFrame)
+            self.recursiveCount += 1
+            return self.recursiveRows(dataFrame, column,  dataType)
+        if self.recursiveCount > 0:
+            if self.recursiveCount > self.dframeLen:
+                a = []
+                b = 0
+                self.recursiveCount = b
+                self.sleepFrame = a
+                return self.recursiveRows(dataFrame, column, dataType)
+            if len(dataFrame) == 0:
+                return pd.Series(self.sleepFrame)
             else:
-                row = dataFrame[:-(len(dataFrame)) + 1]
-                litmus = row[column]
-                self.sleepFrame.append(litmus.values[0][dataType])
-                return self.recursiveRows(dataFrame[1:], dataType)
+                if len(dataFrame) == 1:
+                    row = dataFrame[:]
+                    litmus = row[column]
+                    self.sleepFrame.append(litmus.values[0][dataType])
+                    return self.recursiveRows(dataFrame[1:], column, dataType)
+                else:
+                    row = dataFrame[:-(len(dataFrame)) + 1]
+                    litmus = row[column]
+                    self.sleepFrame.append(litmus.values[0][dataType])
+                    return self.recursiveRows(dataFrame[1:], column, dataType)
 
     def createSleepColumns(self, originalDataFrame, seriesToExpand):
         # type: (Series) -> (DataFrame)
@@ -77,21 +91,34 @@ class Table:
 
 def concatStepHeartSleep(fileToJson):
     parsedJson = parseJsonFile(fileToJson)
+    psqiQuestion = map(lambda x: x + 1, range(10))
+    psqiQuestionList = []
+    for x in psqiQuestion:
+        psqiQuestionList.append("UChicagoIBD/PSQI/Q%s" % x)
     # Heart
-    heartTable = Table()
-    heartRows = heartTable.recursiveRows(parsedJson, 'Fitbit', 'Heart')
-    heartDataFrame = heartTable.createStepOrHeartColumns(parsedJson, heartRows)
+    #heartTable = Table()
+    #heartRows = heartTable.recursiveRows(parsedJson, 'Fitbit', 'Heart')
+    #heartDataFrame = heartTable.createStepOrHeartColumns(parsedJson, heartRows)
     # Steps
-    sleepTable = Table()
-    sleepRows = sleepTable.recursiveRows(parsedJson, 'Fitbit', 'Sleep')
-    sleepDataFrame = sleepTable.createSleepColumns(parsedJson, sleepRows)
+    #sleepTable = Table()
+    #sleepRows = sleepTable.recursiveRows(parsedJson, 'Fitbit', 'Sleep')
+    #sleepDataFrame = sleepTable.createSleepColumns(parsedJson, sleepRows)
     # Sleep
-    stepTable = Table()
-    stepsRows = stepTable.recursiveRows(parsedJson, 'Fitbit', 'Steps')
-    stepDataFrame = sleepTable.createStepOrHeartColumns(parsedJson, stepsRows)
+    #stepTable = Table()
+    #stepsRows = stepTable.recursiveRows(parsedJson, 'Fitbit', 'Steps')
+    #stepDataFrame = sleepTable.createStepOrHeartColumns(parsedJson, stepsRows)
 
-    frame1 = pd.merge(heartDataFrame,sleepDataFrame, on = 'ID')
-    return frame1
+    #frame1 = pd.merge(heartDataFrame,sleepDataFrame, on = 'ID')
+    newtable = Table()
+    frametomerge = []
+    for x in psqiQuestionList:
+        newrows = newtable.recursiveRows(parsedJson, 'Litmus', x)
+        print newrows
+    #    frametomerge.append(psqi1)
+    # fib merging:
+    # merge n-1, n
 
 
 
+
+print concatStepHeartSleep(fpath)
