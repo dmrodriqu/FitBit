@@ -128,16 +128,31 @@ def createSurveyTable(originalDataFrame, surveyType):
         psqirow = question.recursiveRows(originalDataFrame, 'Litmus', str(arrayOfQuestions[i]))
         expandedPsqi = question.createStepOrHeartColumns(originalDataFrame, psqirow)
         expandedPsqi[('%sQuestionID') % surveyType] = i
-        print expandedPsqi
         arrayOfPsqiFrames.append(expandedPsqi)
         i += 1
-    return pd.concat(arrayOfPsqiFrames, axis = 1)
+    return pd.concat(arrayOfPsqiFrames).reset_index()
+
+
+
+#parsing data
 
 fullDataFrame = parseJsonFile(fpath)
-#psqiTable = createPsqiTable(fullDataFrame)
-#print psqiTable
-
-
-
+psqiTable = createSurveyTable(fullDataFrame, 'PSQI')
 sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
+print psqiTable
 print sibdqTable
+
+steps = Table()
+stepSeries = steps.recursiveRows(fullDataFrame, 'Fitbit', 'Steps')
+stepFrame = steps.createStepOrHeartColumns(fullDataFrame, stepSeries)
+print stepFrame
+
+sleep = Table()
+sleepSeries = sleep.recursiveRows(fullDataFrame, 'Fitbit', 'Sleep')
+sleepFrame = sleep.createSleepColumns(fullDataFrame, sleepSeries)
+print sleepFrame
+
+heart = Table()
+heartSeries = heart.recursiveRows(fullDataFrame, 'Fitbit', 'Heart')
+heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
+print heartFrame
