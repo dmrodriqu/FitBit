@@ -89,29 +89,45 @@ class Table:
                 indexCount += 1
         return pd.concat(self.FramesToConcatenate).reset_index()
 
+def defineQuestionStrings(Survey):
+    # raise error if user tries to input anything other than PSQI or SIBDQ
+    try:
+        Survey == 'PSQI' or 'SIBDQ'
+    except ValueError:
+        print ("Survey Origin for function defineQuestionStrings must be PSQI or SIBDQ")
+    finally:
+        # set up initial arrays for questions
+        arrayOfQuestions = []
+        if Survey == 'PSQI':
+            # set up array for sub question only if PSQI
+            listOfSubQuestions = []
+            questiondigits = map(lambda x: x + 1, (range(10)))
+            # alpha suffix a-H reversed for insertion for Q5
+            psqiSubQ5 = string.uppercase[:8]
+            for char in psqiSubQ5:
+                listOfSubQuestions.append("UChicagoIBD/%s/Q5%s" % (Survey, char))
+        elif Survey == 'SIBDQ':
+            # only need digits to append to end of Q
+            questiondigits = map(lambda x: x + 1, (range(9)))
+        for digit in questiondigits:
+            questionString = "UChicagoIBD/%s/Q%s" % (Survey,digit)
+            arrayOfQuestions.append(questionString)
+        if Survey == 'PSQI':
+            arrayOfQuestions[4:4] = listOfSubQuestions
+            arrayOfQuestions.remove('UChicagoIBD/PSQI/Q5')
+        return arrayOfQuestions
 
 
 
-def createPsqiTable(originalDataFrame):
-    arrayOfQuestions = []
+def createSurveyTable(originalDataFrame, surveyType):
+    arrayOfQuestions = defineQuestionStrings(surveyType)
     arrayOfPsqiFrames = []
-    listOfSubQuestions = []
-    psqiSubQ5 = string.uppercase[7::-1]
     i = 0
-    questiondigits = map(lambda x: x+1, (range(10)))
-    for digit in questiondigits:
-        questionString = "UChicagoIBD/PSQI/Q%s" % digit
-        arrayOfQuestions.append(questionString)
-    for char in psqiSubQ5:
-        listOfSubQuestions.append("UChicagoIBD/PSQI/Q5%s" % char)
-    for q in listOfSubQuestions:
-        arrayOfQuestions.insert(4, q)
-    arrayOfQuestions.remove('UChicagoIBD/PSQI/Q5')
     while i < len(arrayOfQuestions):
         question = Table()
         psqirow = question.recursiveRows(originalDataFrame, 'Litmus', str(arrayOfQuestions[i]))
         expandedPsqi = question.createStepOrHeartColumns(originalDataFrame, psqirow)
-        expandedPsqi['PsqiQuestionID'] = i
+        expandedPsqi[('%sQuestionID') % surveyType] = i
         print expandedPsqi
         arrayOfPsqiFrames.append(expandedPsqi)
         i += 1
@@ -122,25 +138,6 @@ fullDataFrame = parseJsonFile(fpath)
 #print psqiTable
 
 
-def createSibdqTable(originalDataFrame):
-    arrayOfQuestions = []
-    arrayOfPsqiFrames = []
-    i = 0
-    # create array of digits, one for each question
-    questiondigits = map(lambda x: x+1, (range(9)))
-    # create question strings
-    for digit in questiondigits:
-        questionString = "UChicagoIBD/SIBDQ/Q%s" % digit
-        arrayOfQuestions.append(questionString)
-    while i < len(arrayOfQuestions):
-        question = Table()
-        psqirow = question.recursiveRows(originalDataFrame, 'Litmus', str(arrayOfQuestions[i]))
-        expandedPsqi = question.createStepOrHeartColumns(originalDataFrame, psqirow)
-        expandedPsqi['SibdqQuestionID'] = i
-        print expandedPsqi
-        arrayOfPsqiFrames.append(expandedPsqi)
-        i += 1
-    return pd.concat(arrayOfPsqiFrames, axis = 1)
 
-sibdqTable = createSibdqTable(fullDataFrame)
+sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
 print sibdqTable
