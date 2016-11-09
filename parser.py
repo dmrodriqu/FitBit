@@ -6,6 +6,7 @@ import datetime
 import math
 from pandas.io.json import json_normalize
 import string
+import datetime
 
 fpath = '/Users/Dylan/Dropbox/FitBit/UChicagoIBD_data.json'
 
@@ -139,20 +140,44 @@ def createSurveyTable(originalDataFrame, surveyType):
 fullDataFrame = parseJsonFile(fpath)
 psqiTable = createSurveyTable(fullDataFrame, 'PSQI')
 sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
-print psqiTable
-print sibdqTable
 
 steps = Table()
 stepSeries = steps.recursiveRows(fullDataFrame, 'Fitbit', 'Steps')
 stepFrame = steps.createStepOrHeartColumns(fullDataFrame, stepSeries)
-print stepFrame
 
 sleep = Table()
 sleepSeries = sleep.recursiveRows(fullDataFrame, 'Fitbit', 'Sleep')
 sleepFrame = sleep.createSleepColumns(fullDataFrame, sleepSeries)
-print sleepFrame
 
 heart = Table()
 heartSeries = heart.recursiveRows(fullDataFrame, 'Fitbit', 'Heart')
 heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
-print heartFrame
+
+
+# Available tables:
+# psqiTable
+# sibdqTable
+# stepFrame
+# sleepFrame
+# heartFrame
+
+def convertToDate(timeStamp):
+    time =  datetime.datetime.fromtimestamp(timeStamp / 1e3)
+    return time.date()
+
+# get IDs
+psqiTable['TimeCompleted'] = map(lambda x: convertToDate(x), psqiTable['TimeCompleted'])
+print psqiTable['TimeCompleted'].unique()
+
+# for each unique id get unique date values
+
+# getting unique IDs
+idToScore = psqiTable['ID'].unique()
+for each in idToScore:
+    # unique frame per ID
+    uniqueIDFrame = psqiTable[psqiTable['ID'] == each]
+    uniqueTimes = uniqueIDFrame['TimeCompleted'].unique()
+    for uniqueTime in uniqueTimes:
+        print uniqueIDFrame[uniqueIDFrame['TimeCompleted'] == uniqueTime][['PSQIQuestionID','Value', 'ID']]
+
+
