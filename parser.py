@@ -5,6 +5,7 @@ import re
 import datetime
 import math
 from pandas.io.json import json_normalize
+import string
 
 fpath = '/Users/Dylan/Dropbox/FitBit/UChicagoIBD_data.json'
 
@@ -89,26 +90,57 @@ class Table:
         return pd.concat(self.FramesToConcatenate).reset_index()
 
 
-def createPsqiTable(filepath):
-    originalDataFrame = parseJsonFile(filepath)
+
+
+def createPsqiTable(originalDataFrame):
     arrayOfQuestions = []
+    arrayOfPsqiFrames = []
+    listOfSubQuestions = []
+    psqiSubQ5 = string.uppercase[7::-1]
+    i = 0
     questiondigits = map(lambda x: x+1, (range(10)))
     for digit in questiondigits:
         questionString = "UChicagoIBD/PSQI/Q%s" % digit
         arrayOfQuestions.append(questionString)
-    print arrayOfQuestions
-    i = 0
-    arrayOfPsqiFrames = []
+    for char in psqiSubQ5:
+        listOfSubQuestions.append("UChicagoIBD/PSQI/Q5%s" % char)
+    for q in listOfSubQuestions:
+        arrayOfQuestions.insert(4, q)
+    arrayOfQuestions.remove('UChicagoIBD/PSQI/Q5')
     while i < len(arrayOfQuestions):
         question = Table()
         psqirow = question.recursiveRows(originalDataFrame, 'Litmus', str(arrayOfQuestions[i]))
         expandedPsqi = question.createStepOrHeartColumns(originalDataFrame, psqirow)
         expandedPsqi['PsqiQuestionID'] = i
         print expandedPsqi
-        arrayOfPsqiFrames.append(psqirow)
-
+        arrayOfPsqiFrames.append(expandedPsqi)
         i += 1
-    print arrayOfPsqiFrames
+    return pd.concat(arrayOfPsqiFrames, axis = 1)
+
+fullDataFrame = parseJsonFile(fpath)
+#psqiTable = createPsqiTable(fullDataFrame)
+#print psqiTable
 
 
-print createPsqiTable(fpath)
+def createSibdqTable(originalDataFrame):
+    arrayOfQuestions = []
+    arrayOfPsqiFrames = []
+    i = 0
+    # create array of digits, one for each question
+    questiondigits = map(lambda x: x+1, (range(9)))
+    # create question strings
+    for digit in questiondigits:
+        questionString = "UChicagoIBD/SIBDQ/Q%s" % digit
+        arrayOfQuestions.append(questionString)
+    while i < len(arrayOfQuestions):
+        question = Table()
+        psqirow = question.recursiveRows(originalDataFrame, 'Litmus', str(arrayOfQuestions[i]))
+        expandedPsqi = question.createStepOrHeartColumns(originalDataFrame, psqirow)
+        expandedPsqi['SibdqQuestionID'] = i
+        print expandedPsqi
+        arrayOfPsqiFrames.append(expandedPsqi)
+        i += 1
+    return pd.concat(arrayOfPsqiFrames, axis = 1)
+
+sibdqTable = createSibdqTable(fullDataFrame)
+print sibdqTable
