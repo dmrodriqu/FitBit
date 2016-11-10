@@ -173,11 +173,152 @@ print psqiTable['TimeCompleted'].unique()
 
 # getting unique IDs
 idToScore = psqiTable['ID'].unique()
+scoringFrame = []
 for each in idToScore:
     # unique frame per ID
     uniqueIDFrame = psqiTable[psqiTable['ID'] == each]
     uniqueTimes = uniqueIDFrame['TimeCompleted'].unique()
     for uniqueTime in uniqueTimes:
-        print uniqueIDFrame[uniqueIDFrame['TimeCompleted'] == uniqueTime][['PSQIQuestionID','Value', 'ID']]
+        scoringFrame.append(uniqueIDFrame[uniqueIDFrame['TimeCompleted'] == uniqueTime]
+                            [['PSQIQuestionID','Value', 'ID']])
 
+
+
+
+itemToScore = scoringFrame[0]
+print itemToScore
+
+# begin scoring:
+def questionSelector(scoringFrame, numOFQuestion):
+    questionCondition = itemToScore['PSQIQuestionID'] == numOFQuestion
+    return itemToScore[questionCondition]['Value']
+i=0
+questionValueArray = []
+while i<=17:
+    questionValues = questionSelector(itemToScore, i)
+    if 4 <= i < 17:
+        questionValueArray.append(questionValues.values[0] - 1)
+    if i == 1:
+        valfor2 = (questionValues.values[0] - 1)
+        if valfor2 > 3:
+            valfor2 = 3
+        questionValueArray.append(valfor2)
+    if i == 3:
+        questionValueArray.append(questionValues.values[0] + 1)
+    if i == 0:
+        if questionValues.values == 1:
+            questionValueArray.append(20.0)
+        if questionValues.values == 2:
+            questionValueArray.append(20.5)
+        if questionValues.values == 3:
+            questionValueArray.append(21.5)
+        if questionValues.values == 4:
+            questionValueArray.append(22.5)
+        if questionValues.values == 5:
+            questionValueArray.append(23.5)
+        if questionValues.values == 6:
+            questionValueArray.append(0.5)
+        if questionValues.values == 7:
+            questionValueArray.append(1.0)
+    i+=1
+
+class Psqi:
+    def __init__(self, scoreArray):
+        self.scoreArray = scoreArray
+        self.comp1 = 0
+        self.comp2 = 0
+        self.comp3 = 0
+        self.comp4 = 0
+        self.comp5 = 0
+        self.comp6 = 0
+        self.comp7 = 0
+        self.score = 0
+
+    def scoreall(self):
+        self._psqiComp1(self.scoreArray)
+        self._psqiComp2(self.scoreArray)
+        self._psqiComp3(self.scoreArray)
+        self._psqiComp4(self.scoreArray)
+        self._psqiComp5(self.scoreArray)
+        self._psqiComp6(self.scoreArray)
+        self._psqiComp7(self.scoreArray)
+
+    def _psqiComp1(self, scoreArray):
+        comp1 = scoreArray[13]
+        self.comp1 = comp1
+        return self.comp1
+
+    def _psqiComp2(self, scoreArray):
+        # comp2
+        modscore = scoreArray[1] + scoreArray[4]
+        if 1 <= modscore <= 2:
+            modscore = 1
+        elif 3<= modscore <= 4:
+            modscore = 2
+        elif modscore > 4:
+            modscore = 3
+        else:
+            modscore = 0
+        comp2 = modscore
+        self.comp2 = comp2
+        return self.comp2
+
+    def _psqiComp3(self, scoreArray):
+        if scoreArray[3] > 7:
+            comp3 = 0
+        elif 6 <= scoreArray[3] < 7:
+            comp3 = 1
+        elif 5 <= scoreArray[3] < 6:
+            comp3 = 2
+        elif scoreArray[3] < 5:
+            comp3 = 3
+        self.comp3 = comp3
+        return self.comp3
+
+    def _psqiComp4(self, scoreArray):
+        if (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 > 100:
+            comp4 = 0
+        elif 75 <= (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 <= 84:
+            comp4 = 1
+        elif 65 <= (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 <= 74:
+            comp4 = 2
+        elif (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 < 65:
+            comp4 = 3
+        self.comp4 = comp4
+        return self.comp4
+
+    def _psqiComp5(self, scoreArray):
+        comp5 = sum(scoreArray[5:13])
+        if 1 <= comp5 <= 9:
+            comp5 = 1
+        if 10 <= comp5 <= 18:
+            comp5 = 2
+        if 19 <= comp5 <= 27:
+            comp5 = 3
+        self.comp5 = comp5
+        return self.comp5
+
+    def _psqiComp6(self, scoreArray):
+        comp6 = scoreArray[14]
+        self.comp6 = comp6
+        return self.comp6
+
+    def _psqiComp7(self, scoreArray):
+        comp7 = sum(scoreArray[15:17])
+        if 1 <= comp7 <= 2:
+            comp7 = 1
+        if 3 <= comp7 <= 4:
+            comp7 = 2
+        if 5 <= comp7 <= 6:
+            comp7 = 3
+        self.comp7 = comp7
+        return self.comp7
+
+    def globalPsqi(self):
+        self.score = self.comp1 + self.comp2 + self.comp3 + self.comp4 + self.comp5 + self.comp6 + self.comp7
+        return self.score
+
+newScore = Psqi(questionValueArray)
+newScore.scoreall()
+print newScore.globalPsqi()
 
