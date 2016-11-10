@@ -8,7 +8,7 @@ from pandas.io.json import json_normalize
 import string
 import datetime
 
-fpath = '/Users/Dylan/Dropbox/FitBit/UChicagoIBD_data.json'
+fpath = '/Volumes/rubin-lab/UChicagoIBD_data.json'
 
 def parseJsonFile(path):
     # type: (String) -> (DataFrame)
@@ -162,65 +162,64 @@ heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
 # heartFrame
 
 def convertToDate(timeStamp):
-    time =  datetime.datetime.fromtimestamp(timeStamp / 1e3)
+    time = datetime.datetime.fromtimestamp(timeStamp / 1e3)
     return time.date()
 
-# get IDs
-psqiTable['TimeCompleted'] = map(lambda x: convertToDate(x), psqiTable['TimeCompleted'])
-print psqiTable['TimeCompleted'].unique()
+def uniqueTimes(surveyFrame):
+    # Set datetimes
+    surveyFrame['TimeCompleted'] = map(lambda x: convertToDate(x), surveyFrame['TimeCompleted'])
+    return surveyFrame
 
 # for each unique id get unique date values
-
-# getting unique IDs
-idToScore = psqiTable['ID'].unique()
-scoringFrame = []
-for each in idToScore:
-    # unique frame per ID
-    uniqueIDFrame = psqiTable[psqiTable['ID'] == each]
-    uniqueTimes = uniqueIDFrame['TimeCompleted'].unique()
-    for uniqueTime in uniqueTimes:
-        scoringFrame.append(uniqueIDFrame[uniqueIDFrame['TimeCompleted'] == uniqueTime]
-                            [['PSQIQuestionID','Value', 'ID']])
-
-
-
-
-itemToScore = scoringFrame[0]
-print itemToScore
+def getUniqueIds(SurveyFrame):
+    # getting unique IDs
+    idToScore = SurveyFrame['ID'].unique()
+    scoringFrame = []
+    for each in idToScore:
+        # unique frame per ID
+        uniqueIDFrame = SurveyFrame[SurveyFrame['ID'] == each]
+        uniqueTimes = uniqueIDFrame['TimeCompleted'].unique()
+        for uniqueTime in uniqueTimes:
+            scoringFrame.append(uniqueIDFrame[uniqueIDFrame['TimeCompleted'] == uniqueTime]
+                                [['PSQIQuestionID','Value', 'ID']])
+    return scoringFrame
 
 # begin scoring:
-def questionSelector(scoringFrame, numOFQuestion):
-    questionCondition = itemToScore['PSQIQuestionID'] == numOFQuestion
+def questionSelector(dataFrame,numOFQuestion):
+    questionCondition = dataFrame['PSQIQuestionID'] == numOFQuestion
     return itemToScore[questionCondition]['Value']
-i=0
-questionValueArray = []
-while i<=17:
-    questionValues = questionSelector(itemToScore, i)
-    if 4 <= i < 17:
-        questionValueArray.append(questionValues.values[0] - 1)
-    if i == 1:
-        valfor2 = (questionValues.values[0] - 1)
-        if valfor2 > 3:
-            valfor2 = 3
-        questionValueArray.append(valfor2)
-    if i == 3:
-        questionValueArray.append(questionValues.values[0] + 1)
-    if i == 0:
-        if questionValues.values == 1:
-            questionValueArray.append(20.0)
-        if questionValues.values == 2:
-            questionValueArray.append(20.5)
-        if questionValues.values == 3:
-            questionValueArray.append(21.5)
-        if questionValues.values == 4:
-            questionValueArray.append(22.5)
-        if questionValues.values == 5:
-            questionValueArray.append(23.5)
-        if questionValues.values == 6:
-            questionValueArray.append(0.5)
-        if questionValues.values == 7:
-            questionValueArray.append(1.0)
-    i+=1
+
+def scoreRaw(dataFrame):
+    i=0
+    questionValueArray = []
+    while i<=17:
+        questionValues = questionSelector(dataFrame, i)
+        if 4 <= i < 17:
+            questionValueArray.append(questionValues.values[0] - 1)
+        if i == 1:
+            valfor2 = (questionValues.values[0] - 1)
+            if valfor2 > 3:
+                valfor2 = 3
+            questionValueArray.append(valfor2)
+        if i == 3:
+            questionValueArray.append(questionValues.values[0] + 1)
+        if i == 0:
+            if questionValues.values == 1:
+                questionValueArray.append(20.0)
+            if questionValues.values == 2:
+                questionValueArray.append(20.5)
+            if questionValues.values == 3:
+                questionValueArray.append(21.5)
+            if questionValues.values == 4:
+                questionValueArray.append(22.5)
+            if questionValues.values == 5:
+                questionValueArray.append(23.5)
+            if questionValues.values == 6:
+                questionValueArray.append(0.5)
+            if questionValues.values == 7:
+                questionValueArray.append(1.0)
+        i+=1
+    return questionValueArray
 
 class Psqi:
     def __init__(self, scoreArray):
@@ -318,7 +317,12 @@ class Psqi:
         self.score = self.comp1 + self.comp2 + self.comp3 + self.comp4 + self.comp5 + self.comp6 + self.comp7
         return self.score
 
-newScore = Psqi(questionValueArray)
+psqiTable = uniqueTimes(psqiTable)
+print psqiTable
+itemToScore = getUniqueIds(psqiTable)[0]
+print itemToScore
+
+newScore = Psqi(scoreRaw(itemToScore))
 newScore.scoreall()
 print newScore.globalPsqi()
 
