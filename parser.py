@@ -137,21 +137,21 @@ def createSurveyTable(originalDataFrame, surveyType):
 
 #parsing data
 
-fullDataFrame = parseJsonFile(fpath)
-psqiTable = createSurveyTable(fullDataFrame, 'PSQI')
-sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
+#fullDataFrame = parseJsonFile(fpath)
+#psqiTable = createSurveyTable(fullDataFrame, 'PSQI')
+#sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
 
-steps = Table()
-stepSeries = steps.recursiveRows(fullDataFrame, 'Fitbit', 'Steps')
-stepFrame = steps.createStepOrHeartColumns(fullDataFrame, stepSeries)
+#steps = Table()
+#stepSeries = steps.recursiveRows(fullDataFrame, 'Fitbit', 'Steps')
+#stepFrame = steps.createStepOrHeartColumns(fullDataFrame, stepSeries)
 
-sleep = Table()
-sleepSeries = sleep.recursiveRows(fullDataFrame, 'Fitbit', 'Sleep')
-sleepFrame = sleep.createSleepColumns(fullDataFrame, sleepSeries)
+#sleep = Table()
+#sleepSeries = sleep.recursiveRows(fullDataFrame, 'Fitbit', 'Sleep')
+#sleepFrame = sleep.createSleepColumns(fullDataFrame, sleepSeries)
 
-heart = Table()
-heartSeries = heart.recursiveRows(fullDataFrame, 'Fitbit', 'Heart')
-heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
+#heart = Table()
+#heartSeries = heart.recursiveRows(fullDataFrame, 'Fitbit', 'Heart')
+#heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
 
 
 # Available tables:
@@ -165,12 +165,12 @@ def convertToDate(timeStamp):
     time = datetime.datetime.fromtimestamp(timeStamp / 1e3)
     return time.date()
 
-def uniqueTimes(surveyFrame):
+def readableDate(surveyFrame):
     # Set datetimes
     surveyFrame['TimeCompleted'] = map(lambda x: convertToDate(x), surveyFrame['TimeCompleted'])
     return surveyFrame
 
-# for each unique id get unique date values
+# for each unique date get ID
 def getUniqueIds(SurveyFrame):
     # getting unique IDs
     idToScore = SurveyFrame['ID'].unique()
@@ -181,13 +181,13 @@ def getUniqueIds(SurveyFrame):
         uniqueTimes = uniqueIDFrame['TimeCompleted'].unique()
         for uniqueTime in uniqueTimes:
             scoringFrame.append(uniqueIDFrame[uniqueIDFrame['TimeCompleted'] == uniqueTime]
-                                [['PSQIQuestionID','Value', 'ID']])
+                                [['PSQIQuestionID','Value', 'ID', 'TimeCompleted']])
     return scoringFrame
 
 # begin scoring:
 def questionSelector(dataFrame,numOFQuestion):
     questionCondition = dataFrame['PSQIQuestionID'] == numOFQuestion
-    return itemToScore[questionCondition]['Value']
+    return dataFrame[questionCondition]['Value']
 
 def scoreRaw(dataFrame):
     i=0
@@ -271,6 +271,8 @@ class Psqi:
             comp3 = 2
         elif scoreArray[3] < 5:
             comp3 = 3
+        else:
+            comp3 = 0
         self.comp3 = comp3
         return self.comp3
 
@@ -292,8 +294,10 @@ class Psqi:
             comp5 = 1
         if 10 <= comp5 <= 18:
             comp5 = 2
-        if 19 <= comp5 <= 27:
+        if 18 < comp5:
             comp5 = 3
+        else:
+            comp5 = 0
         self.comp5 = comp5
         return self.comp5
 
@@ -308,8 +312,10 @@ class Psqi:
             comp7 = 1
         if 3 <= comp7 <= 4:
             comp7 = 2
-        if 5 <= comp7 <= 6:
+        if 4 < comp7:
             comp7 = 3
+        else:
+            comp7 = 0
         self.comp7 = comp7
         return self.comp7
 
@@ -317,12 +323,13 @@ class Psqi:
         self.score = self.comp1 + self.comp2 + self.comp3 + self.comp4 + self.comp5 + self.comp6 + self.comp7
         return self.score
 
-psqiTable = uniqueTimes(psqiTable)
-print psqiTable
-itemToScore = getUniqueIds(psqiTable)[0]
-print itemToScore
-
-newScore = Psqi(scoreRaw(itemToScore))
-newScore.scoreall()
-print newScore.globalPsqi()
+#psqiTable = readableDate(psqiTable)
+#i = 0
+#while i < len(getUniqueIds(psqiTable)):
+#    itemToScore = getUniqueIds(psqiTable)[i]
+#    ptID = itemToScore['ID'].unique()[0]
+#    newScore = Psqi(scoreRaw(itemToScore))
+#    newScore.scoreall()
+#    print newScore.globalPsqi(), ptID
+#    i += 1
 
