@@ -1,6 +1,6 @@
 import parser
 import pandas as pd
-
+import matplotlib.pyplot as plt
 def main ():
 
     fpath = '/Volumes/rubin-lab/UChicagoIBD_data.json'
@@ -37,9 +37,22 @@ def main ():
     psqiDataFrame = {
         'ID' : idSeries,
         'Score' : scoreSeries,
-        'Date' : dateSeries,}
+        'Date' : dateSeries}
 
-    return pd.DataFrame(psqiDataFrame)
+    psqiFrame = pd.DataFrame(psqiDataFrame)
+    vas = parser.Table()
+    vasRows = vas.recursiveRows(fullDataFrame, 'Litmus', "UChicagoIBD/SubjectGlobalAssessmentVAS")
+    vasTable = vas.createStepOrHeartColumns(fullDataFrame, vasRows)
+    vasTable = parser.readableDate(vasTable)
+    psqiGlobalVas = pd.merge(psqiFrame, vasTable, on = 'ID')
+    psqiGlobalVas['Score'] = map(lambda x: x/21.00, psqiGlobalVas['Score'])
+    psqiVasSameDay = psqiGlobalVas[psqiGlobalVas['Date'] == psqiGlobalVas['TimeCompleted']][
+        ['ID', 'Value', 'Score', 'Date', 'TimeCompleted']]
+
+    psqiVasSameDay.plot(x= 'Score', y = 'Value', kind = 'scatter')
+    plt.show()
+
+    return psqiVasSameDay
 
 if __name__ == '__main__':
     print main()
