@@ -8,8 +8,6 @@ from pandas.io.json import json_normalize
 import string
 import datetime
 
-fpath = '/Volumes/rubin-lab/UChicagoIBD_data.json'
-
 def parseJsonFile(path):
     # type: (String) -> (DataFrame)
     json_to_parse = open(path).read()
@@ -136,8 +134,6 @@ def createSurveyTable(originalDataFrame, surveyType):
 
 
 #parsing data
-
-#fullDataFrame = parseJsonFile(fpath)
 #psqiTable = createSurveyTable(fullDataFrame, 'PSQI')
 #sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
 
@@ -322,14 +318,4 @@ class Psqi:
     def globalPsqi(self):
         self.score = self.comp1 + self.comp2 + self.comp3 + self.comp4 + self.comp5 + self.comp6 + self.comp7
         return self.score
-
-#psqiTable = readableDate(psqiTable)
-#i = 0
-#while i < len(getUniqueIds(psqiTable)):
-#    itemToScore = getUniqueIds(psqiTable)[i]
-#    ptID = itemToScore['ID'].unique()[0]
-#    newScore = Psqi(scoreRaw(itemToScore))
-#    newScore.scoreall()
-#    print newScore.globalPsqi(), ptID
-#    i += 1
 
