@@ -45,14 +45,24 @@ def main ():
     vasTable = vas.createStepOrHeartColumns(fullDataFrame, vasRows)
     vasTable = parser.readableDate(vasTable)
     psqiGlobalVas = pd.merge(psqiFrame, vasTable, on = 'ID')
-    psqiGlobalVas['Score'] = map(lambda x: x/21.00, psqiGlobalVas['Score'])
     psqiVasSameDay = psqiGlobalVas[psqiGlobalVas['Date'] == psqiGlobalVas['TimeCompleted']][
         ['ID', 'Value', 'Score', 'Date', 'TimeCompleted']]
 
     psqiVasSameDay.plot(x= 'Score', y = 'Value', kind = 'scatter')
-    plt.show()
+    #create groups
+    groups = psqiVasSameDay.groupby(['ID'])
 
+    # plot
+
+    fig, ax = plt.subplots()
+    ax.margins(0.05)
+    for name, group in groups:
+        ax.plot(group.Score, group.Value, marker= 'o', linestyle = '', ms=12, label=name)
+
+    plt.show()
     return psqiVasSameDay
+
+    #need to find the time between the VAS and the PSQI. find delta
 
 if __name__ == '__main__':
     print main()
