@@ -23,22 +23,22 @@ class stepFrame:
 
 class Timeseries:
 
-	def __init__(self):
+	def __init__(self, ID):
 		self.Timeseries = None
 		self.Total = None
 		self.Date = None
-		self.ID = None
+		self.ID = ID
 
-	def stepCountByID(self, ID):
+	def stepCountByID(self):
 		#test ID 'BLqS60'
-		queryID = ID
+		queryID = self.ID
 		new = stepFrame('stepFrame.csv')
 		graphlist = []
-		print new.frame['ID']
+		#print new.frame['ID']
 		for eachID in new.frame[new.frame['ID'] == queryID]:
 			#newGraph = Timeseries()
 			self.Timeseries = new.frame['Timeseries'].values
-			self.ID = new.frame['ID'].values
+			#self.ID = new.frame['ID'].values
 			self.Date = new.frame['Date'].values
 			self.Total = new.frame['Total'].values
 			#graphlist.append(newGraph)

@@ -8,6 +8,15 @@ from pandas.io.json import json_normalize
 import string
 import datetime
 
+
+def idsToDrop():
+    listOfIDsToDrop = ['1diMEc', 'PeLZ9Z', 'GpvQSU', 'gRqhgp',
+                       '46ZXoP', '2tcXat', 'KLZzPC', 'K1SEV1', 'GJbIM0', '5ieK0V']
+    return listOfIDsToDrop
+
+fpath = '/Volumes/rubin-lab/UChicagoIBD_data.json'
+
+
 def parseJsonFile(path):
     # type: (String) -> (DataFrame)
     json_to_parse = open(path).read()
@@ -67,7 +76,8 @@ class Table:
                     columnToParse = tempframe.ix[:, columncount]
                     for jsonRow in columnToParse:
                         totalSleepFrame = pd.DataFrame.from_dict(jsonRow[0])
-                        totalSleepFrame['ID'] = originalDataFrame.ix[indexCount]['ID']
+                        totalSleepFrame['ID'] = originalDataFrame.ix[
+                            indexCount]['ID']
                         self.listOfExpandedFrames.append(totalSleepFrame)
                         columncount += 1
                 indexCount += 1
@@ -81,19 +91,21 @@ class Table:
             for x in seriesToExpand:
                 if type(x) is list:
                     stepFrameToModify = pd.DataFrame.from_records(x)
-                    stepFrameToModify['ID'] = originalDataFrame.ix[indexCount]['ID']
+                    stepFrameToModify['ID'] = originalDataFrame.ix[
+                        indexCount]['ID']
                     self.FramesToConcatenate.append(stepFrameToModify)
                 else:
                     pass
                 indexCount += 1
         return pd.concat(self.FramesToConcatenate).reset_index()
 
+
 def defineQuestionStrings(Survey):
     # raise error if user tries to input anything other than PSQI or SIBDQ
     try:
         Survey == 'PSQI' or 'SIBDQ'
     except ValueError:
-        print ("Survey Origin for function defineQuestionStrings must be PSQI or SIBDQ")
+        print("Survey Origin for function defineQuestionStrings must be PSQI or SIBDQ")
     finally:
         # set up initial arrays for questions
         arrayOfQuestions = []
@@ -104,18 +116,18 @@ def defineQuestionStrings(Survey):
             # alpha suffix a-H reversed for insertion for Q5
             psqiSubQ5 = string.uppercase[:8]
             for char in psqiSubQ5:
-                listOfSubQuestions.append("UChicagoIBD/%s/Q5%s" % (Survey, char))
+                listOfSubQuestions.append(
+                    "UChicagoIBD/%s/Q5%s" % (Survey, char))
         elif Survey == 'SIBDQ':
             # only need digits to append to end of Q
             questiondigits = map(lambda x: x + 1, (range(9)))
         for digit in questiondigits:
-            questionString = "UChicagoIBD/%s/Q%s" % (Survey,digit)
+            questionString = "UChicagoIBD/%s/Q%s" % (Survey, digit)
             arrayOfQuestions.append(questionString)
         if Survey == 'PSQI':
             arrayOfQuestions[4:4] = listOfSubQuestions
             arrayOfQuestions.remove('UChicagoIBD/PSQI/Q5')
         return arrayOfQuestions
-
 
 
 def createSurveyTable(originalDataFrame, surveyType):
@@ -124,71 +136,85 @@ def createSurveyTable(originalDataFrame, surveyType):
     i = 0
     while i < len(arrayOfQuestions):
         question = Table()
-        psqirow = question.recursiveRows(originalDataFrame, 'Litmus', str(arrayOfQuestions[i]))
-        expandedPsqi = question.createStepOrHeartColumns(originalDataFrame, psqirow)
+        psqirow = question.recursiveRows(
+            originalDataFrame, 'Litmus', str(arrayOfQuestions[i]))
+        expandedPsqi = question.createStepOrHeartColumns(
+            originalDataFrame, psqirow)
         expandedPsqi[('%sQuestionID') % surveyType] = i
         arrayOfPsqiFrames.append(expandedPsqi)
         i += 1
     return pd.concat(arrayOfPsqiFrames).reset_index()
 
+fullDataFrame = parseJsonFile(fpath)
 
-
-#parsing data
-#psqiTable = createSurveyTable(fullDataFrame, 'PSQI')
-#sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
-
-#steps = Table()
-#stepSeries = steps.recursiveRows(fullDataFrame, 'Fitbit', 'Steps')
-#stepFrame = steps.createStepOrHeartColumns(fullDataFrame, stepSeries)
-
-#sleep = Table()
-#sleepSeries = sleep.recursiveRows(fullDataFrame, 'Fitbit', 'Sleep')
-#sleepFrame = sleep.createSleepColumns(fullDataFrame, sleepSeries)
-
-#heart = Table()
-#heartSeries = heart.recursiveRows(fullDataFrame, 'Fitbit', 'Heart')
-#heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
-
-
-# Available tables:
-# psqiTable
-# sibdqTable
-# stepFrame
-# sleepFrame
-# heartFrame
 
 def convertToDate(timeStamp):
     time = datetime.datetime.fromtimestamp(timeStamp / 1e3)
     return time.date()
 
+
 def readableDate(surveyFrame):
     # Set datetimes
-    surveyFrame['TimeCompleted'] = map(lambda x: convertToDate(x), surveyFrame['TimeCompleted'])
+    surveyFrame['TimeCompleted'] = map(
+        lambda x: convertToDate(x), surveyFrame['TimeCompleted'])
     return surveyFrame
 
+
+def fitbitreadableDate(fitbitPassiveFrame):
+    # Set datetimes
+    fitbitPassiveFrame['Timestamp'] = map(
+        lambda x: convertToDate(x), fitbitPassiveFrame['Timestamp'])
+    return fitbitPassiveFrame
+
+
+def sleepdates(sleepFrameDate):
+    # Set datetimes
+    sleepFrameDate['StartTime'] = map(
+        lambda x: convertToDate(x), sleepFrameDate['StartTime'])
+    return sleepFrameDate
+
 # for each unique date get ID
+
+
 def getUniqueIds(SurveyFrame):
+    # Dataframe -> [Dataframe[id1] dataframe[id2]... dataframe[idN]]
+    # gets unique times per ID
     # getting unique IDs
     idToScore = SurveyFrame['ID'].unique()
     scoringFrame = []
     for each in idToScore:
         # unique frame per ID
         uniqueIDFrame = SurveyFrame[SurveyFrame['ID'] == each]
+        # get unique time per ID
         uniqueTimes = uniqueIDFrame['TimeCompleted'].unique()
+        # get psqiquestions and values per unique time completed
         for uniqueTime in uniqueTimes:
             scoringFrame.append(uniqueIDFrame[uniqueIDFrame['TimeCompleted'] == uniqueTime]
-                                [['PSQIQuestionID','Value', 'ID', 'TimeCompleted']])
+                                [['PSQIQuestionID', 'Value', 'ID', 'TimeCompleted']])
     return scoringFrame
 
+def dataframePerID (surveyFrame, ID):
+    # Dataframe, ID -> [dataframe[ID]]
+    # get dataframe for specific ID
+    data = surveyFrame[surveyFrame['ID'] == ID]
+    # get unique times within dataframe
+    data = data.drop_duplicates('TimeCompleted')
+    return data
+
+
+
 # begin scoring:
-def questionSelector(dataFrame,numOFQuestion):
+
+
+def questionSelector(dataFrame, numOFQuestion):
     questionCondition = dataFrame['PSQIQuestionID'] == numOFQuestion
     return dataFrame[questionCondition]['Value']
 
+
 def scoreRaw(dataFrame):
-    i=0
+    i = 0
     questionValueArray = []
-    while i<=17:
+    while i <= 17:
         questionValues = questionSelector(dataFrame, i)
         if 4 <= i < 17:
             questionValueArray.append(questionValues.values[0] - 1)
@@ -200,24 +226,26 @@ def scoreRaw(dataFrame):
         if i == 3:
             questionValueArray.append(questionValues.values[0] + 1)
         if i == 0:
-            if questionValues.values == 1:
+            if questionValues.values[0] == 1:
                 questionValueArray.append(20.0)
-            if questionValues.values == 2:
+            if questionValues.values[0] == 2:
                 questionValueArray.append(20.5)
-            if questionValues.values == 3:
+            if questionValues.values[0] == 3:
                 questionValueArray.append(21.5)
-            if questionValues.values == 4:
+            if questionValues.values[0] == 4:
                 questionValueArray.append(22.5)
-            if questionValues.values == 5:
+            if questionValues.values[0] == 5:
                 questionValueArray.append(23.5)
-            if questionValues.values == 6:
+            if questionValues.values[0] == 6:
                 questionValueArray.append(0.5)
-            if questionValues.values == 7:
+            if questionValues.values[0] == 7:
                 questionValueArray.append(1.0)
-        i+=1
+        i += 1
     return questionValueArray
 
+
 class Psqi:
+
     def __init__(self, scoreArray):
         self.scoreArray = scoreArray
         self.comp1 = 0
@@ -248,7 +276,7 @@ class Psqi:
         modscore = scoreArray[1] + scoreArray[4]
         if 1 <= modscore <= 2:
             modscore = 1
-        elif 3<= modscore <= 4:
+        elif 3 <= modscore <= 4:
             modscore = 2
         elif modscore > 4:
             modscore = 3
@@ -316,6 +344,39 @@ class Psqi:
         return self.comp7
 
     def globalPsqi(self):
-        self.score = self.comp1 + self.comp2 + self.comp3 + self.comp4 + self.comp5 + self.comp6 + self.comp7
+        self.score = self.comp1 + self.comp2 + self.comp3 + \
+            self.comp4 + self.comp5 + self.comp6 + self.comp7
         return self.score
 
+# examples for use
+
+# parsing data
+#psqiTable = createSurveyTable(fullDataFrame, 'PSQI')
+#sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
+# print psqiTable[['index','ID']].drop_duplicates()
+
+
+#steps = Table()
+#stepSeries = steps.recursiveRows(fullDataFrame, 'Fitbit', 'Steps')
+#stepFrame = steps.createStepOrHeartColumns(fullDataFrame, stepSeries)
+
+#sleep = Table()
+#sleepSeries = sleep.recursiveRows(fullDataFrame, 'Fitbit', 'Sleep')
+#sleepFrame = sleep.createSleepColumns(fullDataFrame, sleepSeries)
+# print sleepFrame[sleepFrame['ID'] == 'vB4y2r']
+
+
+#heart = Table()
+#heartSeries = heart.recursiveRows(fullDataFrame, 'Fitbit', 'Heart')
+#heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
+
+
+#sibdqTable['TimeCompleted'] = map(lambda x: convertToDate(x) , sibdqTable['TimeCompleted'])
+# print sibdqTable[sibdqTable['ID']== 'vZoyyc']
+
+# Available tables:
+# psqiTable
+# sibdqTable
+# stepFrame
+# sleepFrame
+# heartFrame

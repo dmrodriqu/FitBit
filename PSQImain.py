@@ -1,12 +1,17 @@
 import parser
 import pandas as pd
 import matplotlib.pyplot as plt
-def psqiParse():
+
+
+def psqiParse(idToFind):
 
     # Generate PSQI table from DataFrame
 
     psqiTable = pd.read_csv('psqiTable.csv')
     # Convert Unix to DateTime
+
+    # select from psqi table where id like # idToFind - > continue
+    psqiTable = psqiTable[psqiTable['ID']==idToFind]
     psqiTable = parser.readableDate(psqiTable)
     # Loop over each ID and Score PSQI
     i = 0
@@ -32,9 +37,11 @@ def psqiParse():
         i += 1
 
     psqiDataFrame = {
-        'ID' : idSeries,
-        'Score' : scoreSeries,
-        'Date' : dateSeries}
+        'ID': idSeries,
+        'Score': scoreSeries,
+        'Date': dateSeries}
 
     psqiFrame = pd.DataFrame(psqiDataFrame)
     return psqiFrame
+
+
