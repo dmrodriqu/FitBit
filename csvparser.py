@@ -31,6 +31,13 @@ def main():
 	heartSeries = heart.recursiveRows(fullDataFrame, 'Fitbit', 'Heart')
 	heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
 
+
+	Vas = parser.Table()
+	globalVas = Vas.recursiveRows(fullDataFrame,'Litmus', "UChicagoIBD/SubjectGlobalAssessmentVAS")
+	globalVasFrame = Vas.createStepOrHeartColumns(fullDataFrame, globalVas)
+	globalVasFrame = parser.readableDate(globalVasFrame)
+
+	globalVasFrame.to_csv('globalVas.csv')
 	psqiTable.to_csv('psqiTable.csv')
 	sibdqTable.to_csv('sibdqTable.csv')
 	stepFrame.to_csv('stepFrame.csv')
