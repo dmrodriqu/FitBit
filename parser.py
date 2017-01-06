@@ -1,7 +1,210 @@
+# $Parser
+# -------
+# $parser is a framework for parsing the incoming Fitbit data from JSON to csv files.
+# $parser identifies the correct record for each ID and places IDs in their records,
+# along with the appropriate information.
+#
+# This is accomplished by separating tables by litmus or fitbit tables and walking through records,
+# indexing by ID and then resetting the index of the table.
+#
+#
+# Several other functions are included to assist in scoring the PSQI
+#
+#
+# Input/Output Format
+# ------------
+#
+# The JSON file is formatted thusly:
+#
+#
+#  ID:{                                    -- each record is enumerated by a unique pt ID
+#       Litmus:{
+#           "UChicagoIBD/SURVEY/Q#":[
+#            {"TimeCompleted": timestamp,  -- for each time completed, a new instance will appear
+#             "TimeRequested": timestamp,  -- under the same question/survey ID
+#              value: int
+#            },
+#            {"TimeCompleted": timestamp,
+#             "TimeRequested": timestamp,
+#              value: int
+#            },
+#          ],
+#          "UchicagoIBD/SleepQualityVAS": [
+#           {"TimeCompleted": timestamp,
+#            "TimeRequested": timestamp,
+#            value: int
+#           },
+#         ],
+#          "UchicagoIBD/SubjectGlobalAssessmentVAS": [
+#           {"TimeCompleted": timestamp,
+#            "TimeRequested": timestamp,
+#            value: int
+#           },
+#         ],
+#          "UchicagoIBD/WongBaker": [
+#           {"TimeCompleted": timestamp,
+#            "TimeRequested": timestamp,
+#            value: int
+#           },
+#         ],
+#          "location": [
+#              {"TimeCompleted": timestamp,
+#               "TimeRequested": timestamp,
+#                  "Value": {
+#                  "Lat" : float64
+#                  "Lon" : float64
+#                  }
+#              },
+#          ],
+#       },
+#       "Fitbit" : {
+#           "Sleep" : [
+#             {
+#               "date": datetime
+#               "sleep": [
+#                 {
+#                   "AwakeCount": int,
+#                   "AwakeDuration": int,
+#                   "AwakeningsCount": int,
+#                   "DateOfSleep": string of date, --- this is a string of a date
+#                   "Duration": int64,             ---  must be converted (it is later)
+#                   "Efficiency": int,
+#                   "IsMainSleep": bool,
+#                   "LogID": int64,
+#                   "MinutesAfterWakeup": int,
+#                   "MinutesAsleep": int,
+#                   "MinutesAwake": int,
+#                   "MinutesToFallAsleep": int,
+#                   "RestlessCount": int,
+#                   "RestlessDuration": int,
+#                   "StartTime": timestamp,
+#                   "TimeInBed": int,
+#                   "MinuteData": [
+#                      {
+#                        "Timestamp": timestamp,
+#                        "Value": int            --- range from [1, 3]
+#                      },
+#                   ],
+#                   "summary": {
+#                     "totalMinutesAsleep": int,
+#                     "totalSleepRecords": int,
+#                     "totalTimeInBed": int
+#                   }
+#               ]
+#             }
+#           ]
+#           "Steps": [
+#             {
+#               "UserID": string,              --- this string is an arbitrary
+#               "Date": string of datetime,    --- identifier and should not be used
+#               "Total": int,
+#               "Timeseries": [
+#                 {
+#                   "Timestamp": timestamp,
+#                   "Value": int
+#                 }
+#               ],
+#               "Interval" : int,             ---- number unit elapsed before measurement taken
+#               "DatasetType": string         ---- DatasetType = minute
+#             },
+#           },
+#           "Heart": [
+#             {
+#               "UserID": string,             --- this string is an arbitrary
+#               "Date": string of datetime,   --- identifier and should not be used
+#               "Zones": [
+#                 {
+#                   "CaloriesOut": float,
+#                   "Max": int,
+#                   "Min": int,
+#                   "Minutes": int,
+#                   "Name": string
+#                 },
+#               ],
+#               "RestingHeartRate": int,
+#               "Timeseries": [
+#                 {
+#                   "Timestamp": int64,
+#                   "Value": int
+#                 },
+#               ],
+#               "Interval": int,
+#               "DatasetType": string
+#             },
+#       },
+# },
+#
+#
+#
+# Reqiurements
+# ------------
+# pandas
+# datetime
+# string
+# modules required:
+# -----------------
+#
+#
+# Usage
+# -----
+# Several functions and classes are present in this module
+#
+# parseJsonFile(path)
+# >>> fpath = '/Volumes/rubin-lab/UChicagoIBD_data.json'
+# >>> parseJsonFile(fpath)
+# [FITBIT] [SLEEP HEART STEPS]
+# [LITMUS] [SURVEY SURVEY SURVEY]
+#
+# Table() is the most prominent of the classes/functions
+#
+# parser.Table()
+#     attributes:
+#     -----------
+#     recursiveRows(dataFrame, column, dataType)
+#     dataFrame = pd.Dataframe
+#
+#     column = "Litmus" or "Fitbit",
+#     dataType = if column is  "Litmus"
+#                "SIBDQ"
+#                "PSQI"
+#                if column is "Fitbit"
+#                "Sleep"
+#                "Step"
+#                "Heart"
+#
+#
+#     createSleepColumns(originalDataFrame, seriesToExpand)
+#     originalDataFrame = dataFrame from which json was parsed
+#
+#     seriesToExpand = sleepseries
+#
+#     the above is respective of the dataType of the dataType
+#     in recursiveRows
+#
+#     createStepOrHeartColumns(originalDataFrame, seriesToExpand)
+#
+#     seriesToExpand = stepseries or heartseries
+#
+#     the above is respective of the dataType of the dataType
+#     in recursiveRows
+#
+# >>> steps = Table()
+# <new Table Object >
+# >>> stepSeries = steps.recursiveRows(fullDataFrame, 'Fitbit', 'Steps')
+#  ID  | AWAKEDURATION  AWAKECOUNT   DURATION DATE  ...   MINUTEDATA
+#  ID1 |      int      |     int   |   datetime1   |     |     int
+#  ID2 |      int      |     int   |   datetime1   |     |     int
+#  ID2 |      int      |     int   |   datetime2   |     |     int
+#  ID3 |      int      |     int   |   datetime1   |     |     int
+# >>> stepFrame = steps.createStepOrHeartColumns(fullDataFrame, stepSeries)
+# ID SLEEP
+# Support
+# -------
+# for issues dylanmr@uchicago.edu
+
+
 import os
-import json
 import pandas as pd
-import re
 import datetime
 import math
 from pandas.io.json import json_normalize
@@ -13,7 +216,7 @@ def idsToDrop():
     listOfIDsToDrop = ['1diMEc', 'PeLZ9Z', 'GpvQSU', 'gRqhgp',
                        '46ZXoP', '2tcXat', 'KLZzPC', 'K1SEV1', 'GJbIM0', '5ieK0V']
     return listOfIDsToDrop
-
+#fullDataFrame = parseJsonFile(fpath)
 fpath = '/Volumes/rubin-lab/UChicagoIBD_data.json'
 
 
@@ -34,13 +237,13 @@ class Table:
         self.recursiveCount = 0
         self.dframeLen = 0
 
-    def recursiveRows(self, dataFrame, column,  dataType):
+    def recursiveRows(self, dataFrame, column, dataType):
         # type: (DataFrame) -> (Series)
 
         if self.recursiveCount == 0:
             self.dframeLen = len(dataFrame)
             self.recursiveCount += 1
-            return self.recursiveRows(dataFrame, column,  dataType)
+            return self.recursiveRows(dataFrame, column, dataType)
         if self.recursiveCount > 0:
             if self.recursiveCount > self.dframeLen:
                 a = []
@@ -145,7 +348,7 @@ def createSurveyTable(originalDataFrame, surveyType):
         i += 1
     return pd.concat(arrayOfPsqiFrames).reset_index()
 
-fullDataFrame = parseJsonFile(fpath)
+
 
 
 def convertToDate(timeStamp):
@@ -189,18 +392,19 @@ def getUniqueIds(SurveyFrame):
         uniqueTimes = uniqueIDFrame['TimeCompleted'].unique()
         # get psqiquestions and values per unique time completed
         for uniqueTime in uniqueTimes:
-            scoringFrame.append(uniqueIDFrame[uniqueIDFrame['TimeCompleted'] == uniqueTime]
-                                [['PSQIQuestionID', 'Value', 'ID', 'TimeCompleted']])
+            conditionForFrame = uniqueIDFrame['TimeCompleted'] == uniqueTime
+            listOfCols = ['PSQIQuestionID', 'Value', 'ID', 'TimeCompleted']
+            scoringFrame.append(uniqueIDFrame[conditionForFrame][listOfCols])
     return scoringFrame
 
-def dataframePerID (surveyFrame, ID):
+
+def dataframePerID(surveyFrame, ID):
     # Dataframe, ID -> [dataframe[ID]]
     # get dataframe for specific ID
     data = surveyFrame[surveyFrame['ID'] == ID]
     # get unique times within dataframe
     data = data.drop_duplicates('TimeCompleted')
     return data
-
 
 
 # begin scoring:

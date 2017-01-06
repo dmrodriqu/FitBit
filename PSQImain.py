@@ -1,17 +1,18 @@
 import parser
 import pandas as pd
-import matplotlib.pyplot as plt
 
 
 def psqiParse(idToFind):
 
     # Generate PSQI table from DataFrame
 
-    psqiTable = pd.read_csv('psqiTable.csv')
+    psqiTable = pd.HDFStore('psqiTable.h5')
+    psqiTable = psqiTable['psqiTable']
     # Convert Unix to DateTime
 
     # select from psqi table where id like # idToFind - > continue
-    psqiTable = psqiTable[psqiTable['ID']==idToFind]
+    psqiTable = psqiTable[psqiTable['ID'] == idToFind][[
+        'PSQIQuestionID', 'Value', 'ID', 'TimeCompleted']]
     psqiTable = parser.readableDate(psqiTable)
     # Loop over each ID and Score PSQI
     i = 0
@@ -23,10 +24,11 @@ def psqiParse(idToFind):
     idSeries = []
     scoreSeries = []
     dateSeries = []
+    # return map(lambda x: x, parser.scoreRaw(psqi))
     while i < len(parser.getUniqueIds(psqiTable)):
         # Find each unique ID
         itemToScore = parser.getUniqueIds(psqiTable)[i]
-        ptID = itemToScore['ID'].unique()[0]
+        ptID = idToFind
         ptTime = itemToScore['TimeCompleted'].unique()[0]
         scoreArray = parser.scoreRaw(itemToScore)
         newScore = parser.Psqi(scoreArray)
@@ -35,13 +37,13 @@ def psqiParse(idToFind):
         scoreSeries.append(newScore.globalPsqi())
         dateSeries.append(ptTime)
         i += 1
-
+#
     psqiDataFrame = {
         'ID': idSeries,
         'Score': scoreSeries,
         'Date': dateSeries}
-
+#
     psqiFrame = pd.DataFrame(psqiDataFrame)
     return psqiFrame
 
-
+# psqiParse("BLqS60")
