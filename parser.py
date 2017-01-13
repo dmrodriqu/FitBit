@@ -202,7 +202,6 @@
 # -------
 # for issues dylanmr@uchicago.edu
 
-
 import os
 import pandas as pd
 import datetime
@@ -347,8 +346,6 @@ def createSurveyTable(originalDataFrame, surveyType):
         arrayOfPsqiFrames.append(expandedPsqi)
         i += 1
     return pd.concat(arrayOfPsqiFrames).reset_index()
-
-
 
 
 def convertToDate(timeStamp):

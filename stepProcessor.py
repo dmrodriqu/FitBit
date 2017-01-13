@@ -53,34 +53,32 @@ import pandas as pd
 # data = pd.read_csv('stepFrame.csv')
 
 # child class of Timeseries
-class stepFrame:
+class HDretrieve:
     # initializing values:
     # dataToRead is the stepFrame.csv file
     # qID is the ID to be queried
-    def __init__(self, dataToRead, qID):
-        self.frame = None
-        self.uniqueID = None
-        self.ID = qID
-        self.readFrame(dataToRead)
-        self.findUniqueID()
+    def __init__(self, filepath, qID):
 
-    def readFrame(self, dataToRead):
+        self.ID = qID
+        self.frame = self.readFrame(filepath)
+
+    def readFrame(self, filepath , dataToRead = 'stepFrame'):
         # fpath -> pd.DataFrame
         # readFrame takes the stepframe CSV file
         # and sets the self.frame variable to the DataFrame
         # with selected conditions below
         # line below: reading CSV to variable "data"
-        data = pd.read_csv(dataToRead)
+        query = '%s' % (self.ID)
+        cond = "ID == "
+        retrieval = cond + query
+        data = pd.read_hdf(filepath, dataToRead,  where = retrieval)
+        #data = data['stepFrame']
         # creating a condition variable for indexing the resulting
         # pd.DateFrame. only selecting data for the ID to be queried
-        cond = data['ID'] == self.ID
+        #cond = data['ID'] == self.ID
+        #col = ['ID', 'Date', 'Total']
         # setting variable self.frame to subset of dataframe
-        self.frame = data[cond][['ID', 'Timeseries', 'Date', 'Total']]
-
-    # deprecated
-    def findUniqueID(self):
-        data = self.frame
-        self.uniqueID = data['ID'].unique()
+        return data
 
 # main class
 
@@ -105,33 +103,21 @@ class Timeseries:
         queryID = self.ID
         # creating new stepframe object and initializing with 'stepframe.csv'
         # and queryID
-        new = stepFrame('stepFrame.csv', queryID)
+        new = HDretrieve('stepFrame.h5', self.ID)
+        df = new.frame
+        col = ['Date', 'Total']
+
+        def getVals(series):
+            return series.values
+
         if graphReady is False:
-            return new.frame[['Date', 'Total']]
+            return df[col]
         elif graphReady is True:
             if withTimeSeries is True:
-                self.Timeseries = new.frame['Timeseries'].values
+                self.Timeseries = getVals(df['Timeseries'])
             else:
                 pass
-            self.date = new.frame['Date'].values
-            self.Total = new.frame['Total'].values
+            self.date = getVals(df['Date'])
+            self.Total = getVals(df['Total'])
         else:
             pass
-        # print new.frame['ID']
-
-        # for eachID in new.frame[new.frame['ID'] == queryID]:
-        #    # newGraph = Timeseries()
-        #    if withTimeSeries is True:
-        #        self.Timeseries = new.frame['Timeseries'].values
-        #    else:
-        #        pass
-        #    # self.ID = new.frame['ID'].values
-        #    self.Date = new.frame['Date'].values
-        #    self.Total = new.frame['Total'].values
-        #    # graphlist.append(newGraph)
-
-        # timeseries[0,1,2,3...n]- 1:1 with  date
-        # date[0,1,2,3...n]-------1:1 with timeseries
-        # id[0,1,2,3...n]
-
-        # return graphlist[0].Total
