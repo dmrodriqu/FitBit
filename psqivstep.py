@@ -45,7 +45,10 @@
 
 
 from stepProcessor import Timeseries
+import pandas as pd
 from PSQImain import psqiParse
+import numpy as np
+
 # goal is to take one ID and to return a graph of PSQI
 # vs Step Count(two week prior)
 # testID 'BLqS60'
@@ -56,16 +59,37 @@ def returnStepsPerID(ID):
     newSeries = Timeseries(ID)
     return newSeries.stepCountByID()
 
-
 def returnPsqiPerID(ID):
     newFrame = psqiParse(ID)
     return newFrame
-
 
 def pqsiStep(ID):
     steps = returnStepsPerID(ID)
     psqi = returnPsqiPerID(ID)
     return steps, psqi
 
+def strDateTime(df):
+    # df -> df
+    df.Date = pd.to_datetime(df.Date)
+    return df
 
-print pqsiStep('BLqS60')
+def getDateVals(df):
+    # df -> series
+    return df.Date.values
+
+def commonTimes(ID):
+    result = pqsiStep(ID)
+    resultlist = []
+    addToResult = resultlist.append
+    for x in result:
+        x = strDateTime(x)
+        addToResult(x)
+    return np.intersect1d(getDateVals(resultlist[0]), getDateVals(resultlist[1]))
+
+def __main__():
+
+    print commonTimes('BLqS60')
+
+
+if __name__ == "__main__":
+    __main__()
