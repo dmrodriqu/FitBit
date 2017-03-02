@@ -1,6 +1,8 @@
 import parser
 import pandas as pd
 import matplotlib.pyplot as plt
+
+# yes, i know, bad practice
 def main ():
 
     fpath = '/Volumes/rubin-lab/UChicagoIBD_data.json'
