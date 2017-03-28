@@ -9,7 +9,7 @@ class table:
 		self.path = filePath
 		self.parsedTable = None
 		self.getAllFrames(filePathToJsonFile)
-		self.addFromNameSpaceToTable()
+		self.addFromBruteSearch()
 
 	def openJsonFile(self, path):
 	    jsonToParse = open(path).read()
@@ -33,12 +33,34 @@ class table:
 	def parseNameSpace(self, regex, testString):
 		matches = re.search(regex, testString)
 		return (matches.group(1))
+
+	def namespaceBruteSearch(self):
+		regexHardList = ['Corporation', 'Study', 'Subject', 'namespace', 'DataPoint']
+		dataToClean = self.concatAndTransposeData(filePathToJsonFile).loc[('namespace')]
+		cleanedList = []
+		addtoCleanedList = cleanedList.append
+		i = 0
+		while i < 4:
+			s1 = regexHardList[i]
+			s2 = regexHardList[i+1]
+			regexStringFormats = r"(?<={0})(.+)(?=\W{1})".format(s1, s2)
+			cleaned = pd.DataFrame([self.parseNameSpace(regexStringFormats, string) for string in dataToClean])
+			addtoCleanedList(cleaned)
+			i += 1
+		return pd.concat(cleanedList, axis = 1)
+		
 	
 	def findSurveyInNamespace(self, filePathToJsonFile):
 		regex = r"(?<=namespace)(.+)(?=\WDataPoint)"
 		dataToClean = self.concatAndTransposeData(filePathToJsonFile).loc[('namespace')]
 		return [self.parseNameSpace(regex, string) for string in dataToClean]
 	
+	def findSubjectInNamespace(self, filePathToJsonFile):
+		regex = r"(?<=Subject)(.+)(?=\Wnamespace)"
+		dataToClean = self.concatAndTransposeData(filePathToJsonFile).loc[('namespace')]
+		return [self.parseNameSpace(regex, string) for string in dataToClean]
+	
+
 	def getAllFrames(self, filePathToJsonFile):
 		df = self.concatAndTransposeData(filePathToJsonFile)
 		indices = df.index.values
@@ -49,6 +71,9 @@ class table:
 		cols = pd.DataFrame(self.findSurveyInNamespace(self.path))
 		self.parsedTable = pd.concat([self.parsedTable, cols], axis = 1)
 
+	def addFromBruteSearch(self):
+		cols = self.namespaceBruteSearch()
+		self.parsedTable = pd.concat([self.parsedTable, cols], axis = 1)
 	
 def main():
 	newTable = table(filePathToJsonFile)
