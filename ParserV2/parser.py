@@ -48,28 +48,12 @@ class table:
 			addtoCleanedList(cleaned)
 			i += 1
 		return pd.concat(cleanedList, axis = 1)
-		
-	
-	def findSurveyInNamespace(self, filePathToJsonFile):
-		regex = r"(?<=namespace)(.+)(?=\WDataPoint)"
-		dataToClean = self.concatAndTransposeData(filePathToJsonFile).loc[('namespace')]
-		return [self.parseNameSpace(regex, string) for string in dataToClean]
-	
-	def findSubjectInNamespace(self, filePathToJsonFile):
-		regex = r"(?<=Subject)(.+)(?=\Wnamespace)"
-		dataToClean = self.concatAndTransposeData(filePathToJsonFile).loc[('namespace')]
-		return [self.parseNameSpace(regex, string) for string in dataToClean]
-	
 
 	def getAllFrames(self, filePathToJsonFile):
 		df = self.concatAndTransposeData(filePathToJsonFile)
 		indices = df.index.values
 		frames = map(pd.DataFrame,[df.loc[x] for x in indices])
 		self.parsedTable = pd.concat(frames, axis = 1).reset_index()
-
-	def addFromNameSpaceToTable(self):
-		cols = pd.DataFrame(self.findSurveyInNamespace(self.path))
-		self.parsedTable = pd.concat([self.parsedTable, cols], axis = 1)
 
 	def addFromBruteSearch(self):
 		cols = self.namespaceBruteSearch()
