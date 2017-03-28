@@ -9,6 +9,7 @@ class table:
 		self.path = filePath
 		self.parsedTable = None
 		self.getAllFrames(filePathToJsonFile)
+		self.addFromNameSpaceToTable()
 
 	def openJsonFile(self, path):
 	    jsonToParse = open(path).read()
@@ -38,16 +39,17 @@ class table:
 		dataToClean = self.concatAndTransposeData(filePathToJsonFile).loc[('namespace')]
 		return [self.parseNameSpace(regex, string) for string in dataToClean]
 	
-	
-	
 	def getAllFrames(self, filePathToJsonFile):
 		df = self.concatAndTransposeData(filePathToJsonFile)
 		indices = df.index.values
 		frames = map(pd.DataFrame,[df.loc[x] for x in indices])
 		self.parsedTable = pd.concat(frames, axis = 1).reset_index()
-	
-#	print getAllFrames(filePathToJsonFile)
 
+	def addFromNameSpaceToTable(self):
+		cols = pd.DataFrame(self.findSurveyInNamespace(self.path))
+		self.parsedTable = pd.concat([self.parsedTable, cols], axis = 1)
+
+	
 def main():
 	newTable = table(filePathToJsonFile)
 	print newTable.parsedTable
