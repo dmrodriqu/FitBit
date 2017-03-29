@@ -1,22 +1,21 @@
 import pandas as pd
 import re
+import time
 
-filePathToJsonFile = '/Volumes/rubin-lab/FitBit/JSON Files/download.json'
-
-class table:
+class Table:
 
 	def __init__(self, filePath):
 		self.path = filePath
 		self.parsedTable = None
-		self.getAllFrames(filePathToJsonFile)
+		self.getAllFrames()
 		self.addFromBruteSearch()
 
-	def openJsonFile(self, path):
-	    jsonToParse = open(path).read()
+	def openJsonFile(self):
+	    jsonToParse = open(self.path).read()
 	    return jsonToParse
 	
-	def parseJson(self, path):
-		openedJsonFile = self.openJsonFile(path)
+	def parseJson(self):
+		openedJsonFile = self.openJsonFile()
 		return pd.read_json(openedJsonFile)
 	
 	def createDataFrame(self, series):
@@ -25,8 +24,8 @@ class table:
 	def parseDataColumn(self, dataToClean):
 		return map(self.createDataFrame, dataToClean)
 	
-	def concatAndTransposeData(self, fpath):
-		dfInit =self.parseJson(filePathToJsonFile).reset_index()['data']
+	def concatAndTransposeData(self):
+		dfInit =self.parseJson().reset_index()['data']
 		dataFrame = pd.concat(self.parseDataColumn(dfInit))
 		return dataFrame.transpose()
 	
@@ -36,7 +35,7 @@ class table:
 
 	def namespaceBruteSearch(self):
 		regexHardList = ['Corporation', 'Study', 'Subject', 'namespace', 'DataPoint']
-		dataToClean = self.concatAndTransposeData(filePathToJsonFile).loc[('namespace')]
+		dataToClean = self.concatAndTransposeData().loc[('namespace')]
 		cleanedList = []
 		addtoCleanedList = cleanedList.append
 		i = 0
@@ -49,8 +48,8 @@ class table:
 			i += 1
 		return pd.concat(cleanedList, axis = 1)
 
-	def getAllFrames(self, filePathToJsonFile):
-		df = self.concatAndTransposeData(filePathToJsonFile)
+	def getAllFrames(self):
+		df = self.concatAndTransposeData()
 		indices = df.index.values
 		frames = map(pd.DataFrame,[df.loc[x] for x in indices])
 		self.parsedTable = pd.concat(frames, axis = 1).reset_index()
@@ -60,8 +59,10 @@ class table:
 		self.parsedTable = pd.concat([self.parsedTable, cols], axis = 1)
 	
 def main():
-	newTable = table(filePathToJsonFile)
-	print newTable.parsedTable
+	fpath = '/Volumes/rubin-lab/FitBit/JSON Files/download.json'
+	newTable = Table(fpath)
+	curDate = time.strftime("%d%m%Y")
+	return newTable.parsedTable.to_csv('rawData{0}.csv'.format(curDate))
 
 
 if __name__ == '__main__':
