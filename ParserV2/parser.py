@@ -1,6 +1,6 @@
 import pandas as pd
 import re
-import time
+
 
 class Table:
 
@@ -9,6 +9,7 @@ class Table:
 		self.parsedTable = None
 		self.getAllFrames()
 		self.addFromBruteSearch()
+		self.renameCol()
 
 	def openJsonFile(self):
 	    jsonToParse = open(self.path).read()
@@ -58,15 +59,11 @@ class Table:
 		cols = self.namespaceBruteSearch()
 		self.parsedTable = pd.concat([self.parsedTable, cols], axis = 1)
 	
-def main():
-	fpath = '/Volumes/rubin-lab/FitBit/JSON Files/download.json'
-	newTable = Table(fpath)
-	curDate = time.strftime("%d%m%Y")
-	return newTable.parsedTable.to_csv('rawData{0}.csv'.format(curDate))
-
-
-if __name__ == '__main__':
-	main()
+	def renameCol(self):
+		self.parsedTable.columns = ['index', 'namespace',
+		 'timeCompleted', 'timeRequested',
+		  'value', 'corp', 'study', 'id', 'survey']
+	
 
 
 
