@@ -1,35 +1,61 @@
 import pandas as pd
 import parser
-from datetime import timedelta
 import PSQImain
-import matplotlib.pyplot as plt
 
-psqiFrame = PSQImain.psqiParse()
-sleepFrame = pd.read_csv('sleepFrame.csv')
+class PsqiVsSleep:
 
+	def __init__(self):
+		self.psqiOB = PSQImain.PsqiTable()
+		self.sleep = None
+		self.SharedIds = None #compare superclass ID functions
+		self.openSleepFrame()
 
-def merger(x, y):
-	mergedTables = pd.merge(x, y, on = 'ID')
-	drops = parser.idsToDrop()
-	mergedTables = mergedTables[~mergedTables['ID'].isin(drops)]
-	return mergedTables
+	def getPsqiIds(self):
+		return self.psqiOB.ids
 
-mergedframe = merger(psqiFrame, sleepFrame)
+	def result(self, df):
+		return self.dropDuplicateDates(self.merger(result, self.sleep))
 
-#procedural non abstraction....
-# later abstract to nC2
+	def getPsqiData(self):
+		listOfIds = self.getPsqiIds()
+		dfList = []
+		addToDflist = dfList.append
+		for each in listOfIds:
+			singleIDPsqi = self.psqiOB.psqiParse(each)
+			addToDflist(self.dropDuplicateDates(self.merger(singleIDPsqi, self.sleep)))
+		return pd.concat(dfList)
 
-#parser.readableDate(mergedframe)
-#mergedframe = mergedframe[mergedframe['DateOfSleep'] == mergedframe['TimeCompleted']]
-#print mergedframe
-mergedframe['Date'] = pd.to_datetime(mergedframe['Date'], infer_datetime_format=True)
-mergedframe['DateOfSleep'] = pd.to_datetime(mergedframe['DateOfSleep'], infer_datetime_format=True)
-#dateMask = (mergedframe['DateOfSleep'] > mergedframe['TimeCompleted'] - timedelta(days=14)) & (mergedframe['DateOfSleep'] < mergedframe['TimeCompleted'])
-dateMask = (mergedframe['DateOfSleep'] == mergedframe['Date'])
+	def openSleepFrame(self):
+		sleepFrame = pd.HDFStore('sleepFrame.h5')
+		self.sleep = sleepFrame['sleepFrame']
+	
+	def merger(self, x, y):
+		mergedTables = pd.merge(x, y, on = 'ID')
+		drops = parser.idsToDrop()
+		mergedTables = mergedTables[~mergedTables['ID'].isin(drops)]
+		return mergedTables
+	
+	def convertToDatetime(self, df, col):
+		df[col] = pd.to_datetime(df[col], infer_datetime_format=True)
+		return df[col]
+	
+	def maskDates(self, mask1, mask2):
+		datemask = (mask1 == mask2)
+		return datemask
+	
+	def dropDuplicateDates(self, mergedDf):
+		df = mergedDf
+		datemask1 = self.convertToDatetime(df, 'DateOfSleep')
+		datemask2 = self.convertToDatetime(df, 'Date')
+		mask = (datemask1 == datemask2)
+		return mergedDf[['Date','ID','Score','Efficiency']].loc[mask].drop_duplicates()
 
+new = PsqiVsSleep()
+print new.getPsqiData()
+	
+#print dropDuplicateDates(merger(psqiFrame, sleepFrame))
 
-#'Date','ID','Score','Efficiency', 'MinutesAsleep', 'RestlessDuration', 'RestlessCount', 'MinutesAwake', 'MinutesToFallAsleep'
-mergedframe = mergedframe[['Date','ID','Score','Efficiency']].loc[dateMask].drop_duplicates()
+'''
 psqiInstances=mergedframe['ID'].value_counts().reset_index()
 psqiInstances1 = psqiInstances[psqiInstances['ID'] == 1]['index'].values
 mergedframe = mergedframe[~mergedframe['ID'].isin(psqiInstances1)]
@@ -46,5 +72,6 @@ ax.set_ylabel('Sleep Efficiency')
 plt.show()
 
 #mergedframe[['ID', 'Date', 'Score']]
+'''
 
-
+# find all IDs in dataframes, pd.append, then get R for linear reg
