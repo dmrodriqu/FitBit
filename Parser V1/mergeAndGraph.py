@@ -50,8 +50,7 @@ class PsqiVsSleep:
 		mask = (datemask1 == datemask2)
 		return mergedDf[['Date','ID','Score','Efficiency']].loc[mask].drop_duplicates()
 
-new = PsqiVsSleep()
-print new.getPsqiData()
+
 	
 #print dropDuplicateDates(merger(psqiFrame, sleepFrame))
 
