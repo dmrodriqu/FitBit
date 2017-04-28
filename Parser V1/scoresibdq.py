@@ -1,45 +1,13 @@
 import openh5
 import time
 import pandas as pd
+import numpy as np
 sibdq = openh5.openData('sibdq')
 sibdq.formatOpeningQuery()
 
+# globals
 
-# basic date formatting before the tree gets constructed.
-
-def convertTime():
-	times = ['TimeCompleted', 'TimeRequested']
-	df = sibdq.df
-	timeConversion = [(df[x]*1000000).apply(pd.to_datetime) for x in times] # pythonic!
-	i = 0
-	while i < len(timeConversion):
-		df[times[i]] = timeConversion[i]
-		i+=1
-	df['TimeRequested'] = df['TimeRequested'].dt.strftime('%Y-%m-%d')
-	return df
-
-tempTable = convertTime()
-
-def getIDs(table):
-	ids = table.ID.value_counts().reset_index().ix[:,:-1].values
-	i = 0
-	listOfIDs = [] 
-	addToListOfIDs = listOfIDs.append
-	while i < len(ids): 			# naieve! 
-		addToListOfIDs(ids[i][0])
-		i +=1
-	return listOfIDs
-
-tempids =  getIDs(tempTable)
-
-tempTable = tempTable[tempTable.ID == tempids[0]].sort_values('TimeCompleted')
-
-tempTimes =  tempTable.TimeRequested.value_counts().reset_index().ix[:,:-1].values
-
-def getUniqueVals(table, column):
-	return table[column].value_counts().reset_index().ix[:,:-1].values
-
-def flatten(vals):
+def _flatten(vals):
 	i = 0
 	listOfVals = [] 
 	addTolistOfVals = listOfVals.append
@@ -48,24 +16,28 @@ def flatten(vals):
 		i +=1
 	return listOfVals
 
-def getFlattenedUniqueVals(table, column):
-	vals = getUniqueVals(table, column)
-	return flatten(vals)
+def _getUniqueVals(dataframe, column):
+	return dataframe[column].value_counts().reset_index().ix[:,:-1].values
 
-#print tempTable
-#print getFlattenedUniqueVals(tempTable, 'TimeRequested')
+def _getUniqueValuesAndFlatten(dataframe, column):
+	return _flatten(_getUniqueVals(dataframe, column))
 
-# getIDs, sort, getDates
-# function, sort, function
-
-# for each date in SibdqParticipant, create SibdqParticipantSurvey
+def _acquireAndSort(dataframe, columnToAcquire, equivalency, columnToSort):
+	return dataframe[dataframe[columnToAcquire] == equivalency].sort_values(columnToSort)
 
 class SibdqParticipantSurvey: # the bottom of the class. contains all necessary scores
 
-	def __init__(self):
-		self.id = None
-		self.date = None
-		self.score = None
+	def __init__(self, surveyID, surveyDate, surveyScores):
+		self.id = surveyID
+		self.date = surveyDate
+		self.score = surveyScores
+		self.scoreSurvey()
+
+	def _setScore(self, value):
+		self.score = value
+
+	def scoreSurvey(self):
+		self._setScore(np.sum(self.score)/8.0)
 
 
 # for each id in SibdqScoringTree, create SibdqParticipant
@@ -74,12 +46,37 @@ class SibdqParticipant:
 
 	def __init__(self, subjectID):
 		self.id = subjectID
-		self.surveys = [] # the dates for the SIBDQ go here
-		self.surveyScores = []
+		self.surveys = [] # surveys for self.id
+		self.surveysToScore = [] # raw data, in case per questions needed
+		self.scoredSurveys = [] # all scored surveys via participantsurvey objects
 
-	def _getUniqueVals(self, dataframe, column):
-		return dataframe[column].value_counts().reset_index().ix[:,:-1].values
-	
+	def _setSurveys(self, value):
+		self.surveysToScore = value
+
+	def populateScores(self):
+		totalSurveys = []
+		for eachSurvey in self.surveys:
+			uniqueIndex = _getUniqueValuesAndFlatten(eachSurvey, 'index')
+			surveys = []
+			addToSurveys = surveys.append
+			for eachIndex in uniqueIndex:
+				uniqueSurvey = _acquireAndSort(eachSurvey, 'index', eachIndex, 'TimeCompleted')
+				addToSurveys(uniqueSurvey)
+			totalSurveys = totalSurveys + surveys
+		self._setSurveys(totalSurveys)
+
+	def scoreSurveys(self):
+		addToScoredSurveys = self.scoredSurveys.append
+		for survey in self.surveysToScore:
+			surveyID = survey['ID'].values[0]
+			surveyDate = survey['TimeRequested'].values[0]
+			surveyScores = survey['Value']
+			createParticipantSurvey = SibdqParticipantSurvey(surveyID, surveyDate, surveyScores.values)
+			addToScoredSurveys(createParticipantSurvey)
+
+
+
+
 
 class SibdqScoringTree: # put entire database here, root to query
 	
@@ -114,52 +111,35 @@ class SibdqScoringTree: # put entire database here, root to query
 		sibdq.formatOpeningQuery()
 		convertedDataFrame = self._convertTime(sibdq.df)
 		self.df = convertedDataFrame
-
-
-	def _getUniqueVals(self, dataframe, column):
-		return dataframe[column].value_counts().reset_index().ix[:,:-1].values
-
-	def _flatten(self, vals):
-		i = 0
-		listOfVals = [] 
-		addTolistOfVals = listOfVals.append
-		while i < len(vals): 			# naieve! 
-			addTolistOfVals(vals[i][0])
-			i +=1
-		return listOfVals
 	
 	def getFlattenedUniqueVals(self, dataframe, destination, column):
-		vals = self._getUniqueVals(dataframe, column)
-		self._flatten(vals)
+		vals = _getUniqueValuesAndFlatten(dataframe, column)
 		if destination == 'ids':
-			self._setUniqueIDs(self._flatten(vals))
+			self._setUniqueIDs(vals)
 		elif destination == 'dates':
-			self._setUniqueDate(self._flatten(vals))
-
-	def _acquireAndSort(self, dataframe, columnToAcquire, equivalency, columnToSort):
-		return dataframe[dataframe[columnToAcquire] == equivalency].sort_values(columnToSort)
+			self._setUniqueDate(vals)
 
 	def getSurveys(self):
 		for eachID in self.uniqueIDs:
 			subject = SibdqParticipant(eachID)
-			df2 = self._acquireAndSort(self.df, 'ID', subject.id, 'TimeCompleted')
+			df2 = _acquireAndSort(self.df, 'ID', subject.id, 'TimeCompleted')
 			self.getFlattenedUniqueVals(df2, 'dates', 'TimeRequested')
 			surveyPerTime = []
 			addToSurveyPerTime = surveyPerTime.append
 			for eachTime in self.uniqueDate:
-				df3 = self._acquireAndSort(df2, 'TimeRequested', eachTime,'TimeCompleted')
+				df3 = _acquireAndSort(df2, 'TimeRequested', eachTime,'TimeCompleted')
 				addToSurveyPerTime(df3)
 			subject.surveys = surveyPerTime
 			self.base.append(subject)
 
 
-
 tree = SibdqScoringTree('sibdq', 'ID')
-print tree
-print tree.uniqueIDs
 tree.getSurveys()
-for each in tree.base:
-	print each.surveys
+for surveyParticipant in tree.base:
+	surveyParticipant.populateScores()
+	surveyParticipant.scoreSurveys()
+	for each in surveyParticipant.scoredSurveys:
+		print each.id, each.score, each.date
 
 ## for tomorrow:
 
