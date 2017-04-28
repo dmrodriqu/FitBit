@@ -132,23 +132,20 @@ class SibdqScoringTree: # put entire database here, root to query
 			subject.surveys = surveyPerTime
 			self.base.append(subject)
 
+def main():
+	results = []
+	addToResults = results.append
+	tree = SibdqScoringTree('sibdq', 'ID')
+	tree.getSurveys()
+	for surveyParticipant in tree.base:
+		surveyParticipant.populateScores()
+		surveyParticipant.scoreSurveys()
+		for each in surveyParticipant.scoredSurveys:
+			addToResults([each.id, each.score, each.date])
+	return results
 
-tree = SibdqScoringTree('sibdq', 'ID')
-tree.getSurveys()
-for surveyParticipant in tree.base:
-	surveyParticipant.populateScores()
-	surveyParticipant.scoreSurveys()
-	for each in surveyParticipant.scoredSurveys:
-		print each.id, each.score, each.date
-
-## for tomorrow:
-
-'''
-id > date > group surveys by date
-
-'''
-
-
+if __name__ == "__main__":
+	print main()
 
 
 
