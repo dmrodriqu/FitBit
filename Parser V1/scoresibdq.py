@@ -2,8 +2,7 @@ import openh5
 import time
 import pandas as pd
 import numpy as np
-sibdq = openh5.openData('sibdq')
-sibdq.formatOpeningQuery()
+
 
 # globals
 
