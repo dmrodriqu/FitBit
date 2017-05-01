@@ -24,24 +24,27 @@ def _getUniqueValuesAndFlatten(dataframe, column):
 def _acquireAndSort(dataframe, columnToAcquire, equivalency, columnToSort):
 	return dataframe[dataframe[columnToAcquire] == equivalency].sort_values(columnToSort)
 
-class SibdqParticipantSurvey: # the bottom of the class. contains all necessary scores
+
+class ParticipantSurvey: # the bottom of the class. contains all necessary scores and aggregate functions
 
 	def __init__(self, surveyID, surveyDate, surveyScores):
 		self.id = surveyID
 		self.date = surveyDate
 		self.score = surveyScores
-		self.scoreSurvey()
 
 	def _setScore(self, value):
 		self.score = value
 
-	def scoreSurvey(self):
-		self._setScore(np.sum(self.score)/8.0)
+	def scoreSIBDQ(self):
+		return np.sum(self.score)/9.0
+
+	def scoreGlobalVas(self):
+		return self.score[0]
 
 
 # for each id in SibdqScoringTree, create SibdqParticipant
 
-class SibdqParticipant:
+class Participant:
 
 	def __init__(self, subjectID):
 		self.id = subjectID
@@ -70,14 +73,14 @@ class SibdqParticipant:
 			surveyID = survey['ID'].values[0]
 			surveyDate = survey['TimeRequested'].values[0]
 			surveyScores = survey['Value']
-			createParticipantSurvey = SibdqParticipantSurvey(surveyID, surveyDate, surveyScores.values)
+			createParticipantSurvey = ParticipantSurvey(surveyID, surveyDate, surveyScores.values)
 			addToScoredSurveys(createParticipantSurvey)
 
 
 
 
 
-class SibdqScoringTree: # put entire database here, root to query
+class ScoringTree: # put entire database here, root to query
 	
 	
 	def __init__(self, tableToSearch, column):
@@ -120,7 +123,7 @@ class SibdqScoringTree: # put entire database here, root to query
 
 	def getSurveys(self):
 		for eachID in self.uniqueIDs:
-			subject = SibdqParticipant(eachID)
+			subject = Participant(eachID)
 			df2 = _acquireAndSort(self.df, 'ID', subject.id, 'TimeCompleted')
 			self.getFlattenedUniqueVals(df2, 'dates', 'TimeRequested')
 			surveyPerTime = []
@@ -131,20 +134,20 @@ class SibdqScoringTree: # put entire database here, root to query
 			subject.surveys = surveyPerTime
 			self.base.append(subject)
 
-def main():
-	results = []
-	addToResults = results.append
-	tree = SibdqScoringTree('sibdq', 'ID')
-	tree.getSurveys()
-	for surveyParticipant in tree.base:
-		surveyParticipant.populateScores()
-		surveyParticipant.scoreSurveys()
-		for each in surveyParticipant.scoredSurveys:
-			addToResults([each.id, each.score, each.date])
-	return results
-
-if __name__ == "__main__":
-	print main()
+#def main():
+#	results = []
+#	addToResults = results.append
+#	tree = ScoringTree('global', 'ID')
+#	tree.getSurveys()
+#	for surveyParticipant in tree.base:
+#		surveyParticipant.populateScores()
+#		surveyParticipant.scoreSurveys()
+#		for each in surveyParticipant.scoredSurveys:
+#			addToResults([each.id, each.scoreGlobalVas(), each.date])
+#	return results
+#
+#if __name__ == "__main__":
+#	print main()
 
 
 
