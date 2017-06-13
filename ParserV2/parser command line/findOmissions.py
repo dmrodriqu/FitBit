@@ -100,9 +100,12 @@ class SubData:
 					i += 1
 					#return ('%s + completed after request date' % (self.participantID))
 			except: # questionCompletionDate == []:
-				addToNonCompletionDates(dateRanges[i+1][0])
-				self._setContactPatient()
-				i += 1
+				if dateRanges[i+1][0] < datetime.now():
+					addToNonCompletionDates(dateRanges[i+1][0])
+					self._setContactPatient()
+					i += 1
+				else:
+					pass
 				#return ('%s + did not complete' % (self.participantID))
 			return ('%s \n completed on following dates: %s \n completed after window on following dates (bug): %s \n and did not complete by %s ' % 
 				(self.participantID[0], completionDates , completionAfterDates, nonCompletionDates))
