@@ -56,8 +56,7 @@ with respect to anticipated survey windows.
 
 The most common printout will be in the following form:
 
-```
-{r, engine='bash'}
+```bash
 LJWQle 
  completed on following dates: [[datetime.datetime(2017, 6, 1, 0, 0)]] 
  completed after window on following dates (bug): [] 
@@ -78,8 +77,7 @@ line
 
 If any surveys appear in the last line as in the below output:
 
-```
-{r, engine='bash'}
+```bash
 joMLAD 
  completed on following dates: [] 
  completed after window on following dates (bug): [] 
