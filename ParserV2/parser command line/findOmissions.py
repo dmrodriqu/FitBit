@@ -107,8 +107,39 @@ class SubData:
 				else:
 					pass
 				#return ('%s + did not complete' % (self.participantID))
-			return ('%s \n completed on following dates: %s \n completed after window on following dates (bug): %s \n and did not complete by %s ' % 
+			return ('%s \n completed on following dates: %s \n completed after window on following dates (bug): %s \n and did not complete by %s \n' % 
 				(self.participantID[0], completionDates , completionAfterDates, nonCompletionDates))
+
+
+	def findVASOmissions(self, question):
+		listOfIdsToContact = []
+		datesCompleted = []
+		completionDates = []
+		deltaDates = []
+		addToDeltaDates = deltaDates.append
+		addToCompletionDates = completionDates.append
+		addTolistOfIdsToContact = listOfIdsToContact.append
+		questionCompletionDate = self.getQuestionDate(question, requested = 'completed')
+		if len(questionCompletionDate) > 0:
+			questionCompletionDate = [datetime.strptime(x, '%Y-%m-%d') for x in questionCompletionDate[0]]
+			addToCompletionDates(questionCompletionDate)
+		differenceInDates = [x - questionCompletionDate[i - 1] for i, x in enumerate(questionCompletionDate)][1:]
+		i = 0
+		while i < len(differenceInDates):
+			if differenceInDates[i] > timedelta(days = 3):
+				addToDeltaDates(completionDates[0][i+1])
+			else:
+				pass
+			i += 1
+		try:
+			if (datetime.now() - completionDates[0][-1]) >= timedelta(days = 2):
+				return ('\n {0} \n last completion dates: {1} \n CONTACT PATIENT \n'.format (self.participantID[0], deltaDates))
+			if (datetime.now() - completionDates[0][-1]) < timedelta(days = 2):
+				return ('\n {0} \n last completion dates: {1} \n'.format (self.participantID[0], deltaDates))
+		except:
+			pass
+
+
 
 class MainData: # this superclass sets up the main dataframe, another b-tree
 	
