@@ -56,7 +56,8 @@ class UniSleep():
 		self.reportedsleep = []
 		# date of slep
 		self.dateOfSleep = []
-		self.sleepPlaceholder = None
+		self.patientID = None
+		#self.sleepPlaceholder = None
 		#placeholder holds sleepclass
 
 
@@ -73,72 +74,75 @@ class UniSleep():
 
 	# for each ID, get the unique dates for that ID
 	
-	def initSleepClass(self):
-		# init sleepFrame Class
-		self.sleepPlaceholder = sleepFrame()
-		self.sleepPlaceholder.construct()
+	#def initSleepClass(self):
+	#	init sleepFrame Class
+	#	self.sleepPlaceholder = sleepFrame()
+	#	self.sleepPlaceholder.construct()
 
 
-	def getUniqueDateForID(self):
-		# for each ID in 
-		self.initSleepClass()
-		return self.sleepPlaceholder.uniqueID
+	#def getUniqueDateForID(self):
+	#	for each ID in 
+	#	self.initSleepClass()
+	#	return self.sleepPlaceholder.uniqueID
 
 	# only append one, use functions outside of class to add
 	# information to data structure 
-	
-	def getDataByID(self):
-		# getting ID from expressed variable
-		idArray = []
-		for each in self.sleepPlaceholder.uniqueID:
-			idArray.append(each)
-		# on^2
-		for idInArray in idArray:
-			idToIndex = idInArray
-			# storing class var in function var
-			data = self.sleepPlaceholder.frame
-			# selecting dataframe for only ID we want
-			dataToIndex = data[data['ID'] == idToIndex]
-			sleepDates = dataToIndex['DateOfSleep'].unique()
-			# selecting dates specific to ID
-			datearr = []
-			timearr = []
-			for date in sleepDates:
-				# set date
-				# set minute data
-				# date1, date2, date3....dateN
-				# minutedata1, minutedata2, minutedata3...minutedataN
-				datearr.append(date)
-				dataForPlot = dataToIndex[dataToIndex['DateOfSleep'] == date]
-				seriesToPlot = dataForPlot['MinuteData'].values
-				timearr.append(seriesToPlot)
-			self.dateOfSleep.append(datearr)
-			self.reportedsleep.append(timearr)
+
+	def getEdgeTimes(self, sleepTimes):
+
+		# get time of today
+		today = Delorean(datetime = self.dateOfSleep)
 		
-	def getZeroHour(self):
-		today = 1467336420
-		midnight = epoch(today).midnight
-		d = Delorean(datetime = midnight)
-		print d.epoch
+		def getZeroHour(today):
+			midnight = epoch(today).midnight
+			d = Delorean(datetime = midnight)
+			return d.epoch
+		
+		def getEndHour(today):
+			tomorrowmid = epoch(today).next_day().midnight
+			d = Delorean(datetime = tomorrowmid)
+			return d.epoch
+		
+		return getZeroHour(),getEndHour()
 
-	def getEndHour(self):
-		today = 1467336420
-		tomorrowmid = epoch(today).next_day().midnight
-		d = Delorean(datetime = tomorrowmid)
-		print d.epoch
+		def preAppendTimes(today):
+			preAppendArray = []
+			AppendArray = []
+			secAtMidnight = getZeroHour(today)
+			secAtTomorrowMidnight = getEndHour(today)
+			secondsFromMidnight = time - secAtMidnight
+			secondsToMidnight = secAtTomorrowMidnight- time 
+			secondsToPrepend = range(secondsFromMidnight - 1)
+			secondsToAppend = range(secondsToAppend - 1)
+			for num in secondsToPrepend:
+				addToPreArr = today+num
+				preAppendArray.append(addToPreArr)
+			for num in secondsToAppend:
+				addToAppendArray = today+num
+				AppendArray.append(addToAppendArray)
+			return preAppendArray, AppendArray
+
+		def concatenationOfSuppTimes(sleepTimes):
+			sleepTimes = map(lambda x : ast.literal_eval(x))
+			sleepValues = []
+			SleepKeys = []
+			supplimentTimes = preAppendTimes()
+			preArr = supplimentTimes[0]
+			postArr = supplimentTimes[1]
+			for x in preArr:
+				sleepValues.append(0)
+			for x in sleepTimes:
+				sleepValues.append(x.values)
+				SleepKeys.append(x.keys)
+			for x in postArr:
+				sleepValues.append(0)
+			totalSleepArray = preArr + sleepTimes + postArr
+			return sleepValues, totalSleepArray
+			# get values of original, convert to arr,
+
+
 		
 
 
-new = UniSleep()
-print new.getUniqueDateForID()
-new.getDataByID()
-print new.dateOfSleep[0]
-print new.reportedsleep[0][0]
-print new.getZeroHour()
-print new.getEndHour()
-
-# for tomorrow, get unique IDs, 
-# for ID in list of Unique IDs, get data[data['id'] == 'id' ][minutedata]
-# however, need to index id to equivalent
 
 

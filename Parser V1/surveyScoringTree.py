@@ -2,7 +2,7 @@ import openh5
 import time
 import pandas as pd
 import numpy as np
-
+from parser import Psqi
 
 # globals
 
@@ -32,14 +32,50 @@ class ParticipantSurvey: # the bottom of the class. contains all necessary score
 		self.date = surveyDate
 		self.score = surveyScores
 
-	def _setScore(self, value):
-		self.score = value
-
 	def scoreSIBDQ(self):
-		return np.sum(self.score)/9.0
+		return np.sum(self.score)
 
 	def scoreGlobalVas(self):
 		return self.score[0]
+
+	def scorePSQI(self):
+		if len(self.score) < 17:
+			pass
+		else:
+			i = 0
+			qvals = []
+			questionValueArray = list(self.score)
+			while i < 17:
+				questionValues = questionValueArray[i]
+				if 4 <= i < 17:
+					qvals.append(questionValues - 1)
+				if i == 1:
+					valfor2 = (questionValues - 1)
+					if valfor2 > 3:
+						valfor2 = 3
+						qvals.append(valfor2)
+				if i == 3:
+					qvals.append(questionValues + 1)
+				if i == 0:
+					if questionValues == 1:
+						qvals.append(20.0)
+					if questionValues == 2:
+						qvals.append(20.5)
+					if questionValues == 3:
+						qvals.append(21.5)
+					if questionValues == 4:
+						qvals.append(22.5)
+					if questionValues == 5:
+						qvals.append(23.5)
+					if questionValues == 6:
+						qvals.append(0.5)
+					if questionValues == 7:
+						qvals.append(1.0)
+				i += 1
+			scores = Psqi(qvals)
+			scores.scoreall()
+			scores.globalPsqi()
+			return scores.score
 
 
 # for each id in SibdqScoringTree, create SibdqParticipant
@@ -75,9 +111,6 @@ class Participant:
 			surveyScores = survey['Value']
 			createParticipantSurvey = ParticipantSurvey(surveyID, surveyDate, surveyScores.values)
 			addToScoredSurveys(createParticipantSurvey)
-
-
-
 
 
 class ScoringTree: # put entire database here, root to query
@@ -134,20 +167,23 @@ class ScoringTree: # put entire database here, root to query
 			subject.surveys = surveyPerTime
 			self.base.append(subject)
 
-#def main():
-#	results = []
-#	addToResults = results.append
-#	tree = ScoringTree('global', 'ID')
-#	tree.getSurveys()
-#	for surveyParticipant in tree.base:
-#		surveyParticipant.populateScores()
-#		surveyParticipant.scoreSurveys()
-#		for each in surveyParticipant.scoredSurveys:
-#			addToResults([each.id, each.scoreGlobalVas(), each.date])
-#	return results
-#
-#if __name__ == "__main__":
-#	print main()
+def main():
+	results = []
+	filterArr = ['2tcXat', 'GJbIM0', 'gRqhgp']
+	addToResults = results.append
+	tree = ScoringTree('psqi', 'ID')
+	tree.getSurveys()
+	for surveyParticipant in tree.base:
+		if surveyParticipant.id not in filterArr:
+			surveyParticipant.populateScores()
+			surveyParticipant.scoreSurveys()
+			for each in surveyParticipant.scoredSurveys:
+				addToResults([each.date, each.id])
+	output = pd.DataFrame(results)
+	return output
+
+if __name__ == "__main__":
+	print main()
 
 
 

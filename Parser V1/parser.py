@@ -17,7 +17,7 @@
 # The JSON file is formatted thusly:
 #
 #
-#  ID:{                                    -- each record is enumerated by a unique pt ID
+#  ID:{                                    -- each record key is a pt ID
 #       Litmus:{
 #           "UChicagoIBD/SURVEY/Q#":[
 #            {"TimeCompleted": timestamp,  -- for each time completed, a new instance will appear
@@ -238,7 +238,6 @@ class Table:
 
     def recursiveRows(self, dataFrame, column, dataType):
         # type: (DataFrame) -> (Series)
-
         if self.recursiveCount == 0:
             self.dframeLen = len(dataFrame)
             self.recursiveCount += 1
@@ -458,6 +457,30 @@ class Psqi:
         self.comp7 = 0
         self.score = 0
 
+    def _setScore(self, vals):
+        self.score = vals
+
+    def _setcomp1(self, vals):
+        self.comp1 = vals
+
+    def _setcomp2(self, vals):
+        self.comp2 = vals
+
+    def _setcomp3(self, vals):
+        self.comp3 = vals
+
+    def _setcomp4(self, vals):
+        self.comp4 = vals
+
+    def _setcomp5(self, vals):
+        self.comp5 = vals
+
+    def _setcomp6(self, vals):
+        self.comp6 = vals
+
+    def _setcomp7(self, vals):
+        self.comp7 = vals
+
     def scoreall(self):
         self._psqiComp1(self.scoreArray)
         self._psqiComp2(self.scoreArray)
@@ -469,8 +492,8 @@ class Psqi:
 
     def _psqiComp1(self, scoreArray):
         comp1 = scoreArray[13]
-        self.comp1 = comp1
-        return self.comp1
+        self._setcomp1(comp1)
+
 
     def _psqiComp2(self, scoreArray):
         # comp2
@@ -484,8 +507,8 @@ class Psqi:
         else:
             modscore = 0
         comp2 = modscore
-        self.comp2 = comp2
-        return self.comp2
+        self._setcomp2(comp2)
+
 
     def _psqiComp3(self, scoreArray):
         if scoreArray[3] > 7:
@@ -498,8 +521,8 @@ class Psqi:
             comp3 = 3
         else:
             comp3 = 0
-        self.comp3 = comp3
-        return self.comp3
+        self._setcomp3(comp3)
+
 
     def _psqiComp4(self, scoreArray):
         if (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 > 100:
@@ -510,8 +533,8 @@ class Psqi:
             comp4 = 2
         elif (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 < 65:
             comp4 = 3
-        self.comp4 = comp4
-        return self.comp4
+        self._setcomp4(comp4)
+
 
     def _psqiComp5(self, scoreArray):
         comp5 = sum(scoreArray[5:13])
@@ -523,13 +546,12 @@ class Psqi:
             comp5 = 3
         else:
             comp5 = 0
-        self.comp5 = comp5
-        return self.comp5
+        self._setcomp5(comp5)
 
     def _psqiComp6(self, scoreArray):
         comp6 = scoreArray[14]
-        self.comp6 = comp6
-        return self.comp6
+        self._setcomp6(comp6)
+
 
     def _psqiComp7(self, scoreArray):
         comp7 = sum(scoreArray[15:17])
@@ -541,13 +563,13 @@ class Psqi:
             comp7 = 3
         else:
             comp7 = 0
-        self.comp7 = comp7
-        return self.comp7
+        self._setcomp7(comp7)
+
 
     def globalPsqi(self):
         self.score = self.comp1 + self.comp2 + self.comp3 + \
             self.comp4 + self.comp5 + self.comp6 + self.comp7
-        return self.score
+        self._setScore(self.score) #updated
 
 # examples for use
 

@@ -50,12 +50,20 @@ def encodeAndExport(df, nameOfFrame):
         storageName = "%s" % stringtoname
         print (stringtoname)
         return df.to_hdf(fileAndExt, storageName,
-                     mode='w', format='table', data_columns=['ID'])
+                         mode='w', format='table', data_columns=['ID'])
 
     encoded = unicodeToString(df)
     return parseAndExport(encoded, nameOfFrame)
+
 # parsing data storing as csv
+
+
 def main():
+
+    # bad practice
+    # abstract later,
+    # switch on data to parse
+
     fullDataFrame = parseJsonFile(fpath)
     Vas = Table()
     globalVas = Vas.recursiveRows(
@@ -64,33 +72,40 @@ def main():
     encodeAndExport(globalVasFrame, 'globalVas')
 
     # all but timeseries data
-    # store timeseries separately i/o bound/hdf encoding to solve
+    # parser bound
     # maybe coerce to string -> eval back later.
     steps = Table()
     stepSeries = steps.recursiveRows(fullDataFrame, 'Fitbit', 'Steps')
     stepFrame = steps.createStepOrHeartColumns(fullDataFrame, stepSeries)
-    stepFrame = stepFrame.drop(['Timeseries'], axis=1)
+    stepFrame['Timeseries'] = stepFrame['Timeseries'].astype(str)
+    stepFrameTimeSeries = pd.DataFrame(stepFrame[['ID', 'Timeseries']])
+    stepFrame = stepFrame.drop('Timeseries', axis=1)
     encodeAndExport(stepFrame, 'stepFrame')
-
-
+    encodeAndExport(stepFrameTimeSeries, 'stepFrameTimeSeries')
 
     psqiTable = createSurveyTable(fullDataFrame, 'PSQI')
     encodeAndExport(psqiTable, 'psqiTable')
 
+    sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
+    encodeAndExport(sibdqTable, 'sibdqTable')
 
-  # sibdqTable = createSurveyTable(fullDataFrame, 'SIBDQ')
+    sleep = Table()
+    sleepSeries = sleep.recursiveRows(fullDataFrame, 'Fitbit', 'Sleep')
+    sleepFrame = sleep.createSleepColumns(fullDataFrame, sleepSeries)
+    sleepFrame['MinuteData'] = sleepFrame['MinuteData'].astype(str)
+    encodeAndExport(sleepFrame, 'sleepFrame')
 
+    heart = Table()
+    heartSeries = heart.recursiveRows(fullDataFrame, 'Fitbit', 'Heart')
+    heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
+    heartFrame[['Timeseries', 'Zones']] = heartFrame[
+        ['Timeseries', 'Zones']].astype(str)
+    heartFrameTimeSeries = heartFrame[['ID', 'Timeseries', 'Zones']]
+    heartFrame = heartFrame.drop(['Timeseries', 'Zones'], axis=1)
+    encodeAndExport(heartFrame, 'heartFrame')
+    encodeAndExport(heartFrameTimeSeries, 'heartFrameTimeSeries')
 
-
-
-  # sleep = parser.Table()
-  # sleepSeries = sleep.recursiveRows(fullDataFrame, 'Fitbit', 'Sleep')
-  # sleepFrame = sleep.createSleepColumns(fullDataFrame, sleepSeries)
-
-  # heart = parser.Table()
-  # heartSeries = heart.recursiveRows(fullDataFrame, 'Fitbit', 'Heart')
-  # heartFrame = heart.createStepOrHeartColumns(fullDataFrame, heartSeries)
-
+    print("done")
 
   # types = globalVasFrame.apply(lambda x: pd.lib.infer_dtype(x.values))
   # unicodeType = types[types == 'unicode']
@@ -98,7 +113,6 @@ def main():
   #    globalVasFrame[col] = globalVasFrame[col].astype(str)
   # globalVasFrame.to_hdf('globalVas.h5', 'globalVas',
   #                      mode='w', format='table', data_columns=['ID'])
-
 
   # stepFrame.to_hdf('stepFrame.h5', 'stepFrame')
   # sleepFrame.to_hdf('sleepFrame.h5', 'sleepFrame')

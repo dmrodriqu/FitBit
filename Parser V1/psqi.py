@@ -1,18 +1,14 @@
 import parser
 import pandas as pd
 import matplotlib.pyplot as plt
-
-# yes, i know, bad practice
 def main ():
 
-    fpath = '/Volumes/rubin-lab/UChicagoIBD_data.json'
+    fpath = '/Volumes/rubin-lab/FitBit/psqiTable.csv'
     # get PSQI scores from all individuals
     # parse Json to DataFrame
-    fullDataFrame = parser.parseJsonFile(fpath)
     # Generate PSQI table from DataFrame
-    psqiTable = parser.createSurveyTable(fullDataFrame, 'PSQI')
+    psqiTable = pd.read_csv(fpath)
     # Convert Unix to DateTime
-    psqiTable = parser.readableDate(psqiTable)
     # Loop over each ID and Score PSQI
     i = 0
     # create dictionaries for DataFrame:
@@ -23,12 +19,21 @@ def main ():
     idSeries = []
     scoreSeries = []
     dateSeries = []
-    while i < len(parser.getUniqueIds(psqiTable)):
-        # Find each unique ID
-        itemToScore = parser.getUniqueIds(psqiTable)[i]
-        ptID = itemToScore['ID'].unique()[0]
-        ptTime = itemToScore['TimeCompleted'].unique()[0]
-        scoreArray = parser.scoreRaw(itemToScore)
+    #print parser.getUniqueIds(psqiTable)
+    #while i < len(psqiTable.ID.unique()):
+    # while i is less than the length of the number of unique IDs present
+    while i < len(psqiTable.ID.unique()):
+        # ID to score in array indexed with i
+        # psqiTable.ID.unique() = [id1, id2, id3... idN]
+        # itemToScore = ID[i] where += 1 over loop
+        itemToScore = psqiTable.ID.unique()[i]
+        # ptID = IDn
+        ptID = itemToScore
+        # time from frame where same as the ID ix. take only unique vals.
+        ptTime = psqiTable[psqiTable['ID'] == itemToScore]['TimeCompleted'].unique()[0]
+        # rawscore(ID) ->  values
+        testing = psqiTable[psqiTable['ID'] == itemToScore]
+        scoreArray = parser.scoreRaw(psqiTable[psqiTable['ID'] == itemToScore])
         newScore = parser.Psqi(scoreArray)
         newScore.scoreall()
         idSeries.append(ptID)
@@ -42,14 +47,13 @@ def main ():
         'Date' : dateSeries}
 
     psqiFrame = pd.DataFrame(psqiDataFrame)
-    vas = parser.Table()
-    vasRows = vas.recursiveRows(fullDataFrame, 'Litmus', "UChicagoIBD/SubjectGlobalAssessmentVAS")
-    vasTable = vas.createStepOrHeartColumns(fullDataFrame, vasRows)
-    vasTable = parser.readableDate(vasTable)
+    psqiFrame['Date'] = map(lambda x: parser.convertToDate(x), psqiFrame['Date'])
+    vasTable = pd.read_csv('globalVas.csv')
+    vasTable['TimeRequested'] = map(lambda x: parser.convertToDate(x), vasTable['TimeRequested'])
     psqiGlobalVas = pd.merge(psqiFrame, vasTable, on = 'ID')
-    psqiVasSameDay = psqiGlobalVas[psqiGlobalVas['Date'] == psqiGlobalVas['TimeCompleted']][
-        ['ID', 'Value', 'Score', 'Date', 'TimeCompleted']]
-
+    print psqiGlobalVas
+    psqiVasSameDay = psqiGlobalVas[psqiGlobalVas['Date'] == psqiGlobalVas['TimeRequested']][
+        ['ID', 'Value', 'Score', 'Date', 'TimeRequested']]
     psqiVasSameDay.plot(x= 'Score', y = 'Value', kind = 'scatter')
     #create groups
     groups = psqiVasSameDay.groupby(['ID'])

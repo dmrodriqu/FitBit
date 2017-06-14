@@ -4,10 +4,11 @@ import PSQImain
 
 class PsqiVsSleep:
 
-	def __init__(self):
+	def __init__(self, metric):
 		self.psqiOB = PSQImain.PsqiTable()
 		self.sleep = None
 		self.SharedIds = None #compare superclass ID functions
+		self.column = metric
 		self.openSleepFrame()
 
 	def getPsqiIds(self):
@@ -30,7 +31,7 @@ class PsqiVsSleep:
 		self.sleep = sleepFrame['sleepFrame']
 	
 	def merger(self, x, y):
-		mergedTables = pd.merge(x, y, on = 'ID')
+		mergedTables = pd.merge(x, y, on = 'ID', how = 'outer')
 		drops = parser.idsToDrop()
 		mergedTables = mergedTables[~mergedTables['ID'].isin(drops)]
 		return mergedTables
@@ -48,7 +49,7 @@ class PsqiVsSleep:
 		datemask1 = self.convertToDatetime(df, 'DateOfSleep')
 		datemask2 = self.convertToDatetime(df, 'Date')
 		mask = (datemask1 == datemask2)
-		return mergedDf[['Date','ID','Score','Efficiency']].loc[mask].drop_duplicates()
+		return mergedDf[['Date','ID','Score', self.column]].loc[mask]
 
 
 	

@@ -1,7 +1,13 @@
 import surveyScoringTree
 import pandas as pd 
 import datetime
-
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.style.use('ggplot')
+from sklearn import preprocessing
+import numpy as np
+import seaborn as sns
+sns.set(color_codes=True)
 
 def acquireAndSort(dataframe, cond, columnToSort):
 	return dataframe[cond].sort_values(columnToSort)
@@ -12,7 +18,6 @@ class ParticipantSurveys:
 		self.df = survey
 		self.date = surveyDate
 		self.aggregate = []
-		self.summary()
 
 	def _setAggreagate(self, vals):
 		self.aggregate = vals
@@ -20,7 +25,6 @@ class ParticipantSurveys:
 	def summary(self):
 		self._setAggreagate([self.df['1_x'].mean(), 
 			self.df['1_y'].mean(), self.df['2_y'].values[0]])
-
 
 class pairwiseSurveyParticipant:
 
@@ -59,8 +63,10 @@ class PairwiseSurveys:
 			for each in surveyParticipant.scoredSurveys:
 				if table == 'global':
 					addToResults([each.id, each.scoreGlobalVas(), each.date])
-				else:
+				elif table == 'sibdq':
 					addToResults([each.id, each.scoreSIBDQ(), each.date])
+				elif table == 'psqi':
+					addToResults([each.id, each.scorePSQI(), each.date])
 		return results
 
 	def _createDataframe(self,dataFromScores):
@@ -87,16 +93,34 @@ class PairwiseSurveys:
 			tempdf = self.df[self.df[0] == x]
 			addToSurveyParticipants(pairwiseSurveyParticipant(x, tempdf))
 
+def createPlot(df1, df2):
+	dfAlias1xAxis = df1
+	dfAlias2yAxis = df2
+	surveys = PairwiseSurveys(dfAlias2yAxis, dfAlias1xAxis)
+	surveys.createPairwiseParticipants()
+	newFrame = []
+	filterarr = ['2tcXat', 'GJbIM0', 'gRqhgp']
+	addTonewFrame = newFrame.append
+	for each in surveys.surveyParticipants: 
+		if each.id not in filterarr:
+			each.createSurveys()
+	for each in surveys.surveyParticipants:
+		print each.id
+		for ob in each.surveys:
+			ob.summary()
+			print ob.aggregate
+			addTonewFrame(ob.aggregate)
+	results = pd.DataFrame(newFrame)
+	print results
+	results.rename(columns={0: dfAlias2yAxis , 1 : dfAlias1xAxis, 2: 'Date'}, inplace=True)
+	sns.jointplot(x=dfAlias1xAxis, y=dfAlias2yAxis, data=results, ci= False, kind = 'reg', robust=True ) # yes, the axes look reversed, aggregates data
+	plt.show()
 
+#createPlot('psqi', 'sibdq')
+#createPlot('psqi', 'global')
+#createPlot('sibdq', 'global')
 
-
-surveys = PairwiseSurveys('global', 'sibdq')
-surveys.createPairwiseParticipants()
-for each in surveys.surveyParticipants:
-	each.createSurveys()
-for each in surveys.surveyParticipants:
-	print each.id
-	for ob in each.surveys:
-		print ob.aggregate
+def findTimes():
+	surveys.createPairwiseParticipants()
 
 
