@@ -56,12 +56,12 @@ with respect to anticipated survey windows.
 
 The most common printout will be in the following form:
 
-‘’’
+```
 LJWQle 
  completed on following dates: [[datetime.datetime(2017, 6, 1, 0, 0)]] 
  completed after window on following dates (bug): [] 
  and did not complete by [] 
-‘’’
+```
 
 The first line represents the participant ID
 The second line represents the dates of which 
@@ -77,13 +77,13 @@ line
 
 If any surveys appear in the last line as in the below output:
 
-‘’’
+```
 joMLAD 
  completed on following dates: [] 
  completed after window on following dates (bug): [] 
  and did not complete by [datetime.datetime(2017, 6, 1, 0, 0)] 
 CONTACT PATIENT
-‘’’
+```
 
 “CONTACT PATIENT” will appear. 
 
