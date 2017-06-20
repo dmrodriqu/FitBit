@@ -1,7 +1,7 @@
 # Finds and prints omissions of data to command line.
 
 Command line usage:
-$ python findomissions.py -h <help> -q <question> 
+$ python printomissions.py -h <help> -q <question> 
 
 # Executable usage:
 
