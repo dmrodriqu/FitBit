@@ -5,7 +5,7 @@ The enclosed programs parse biometric and survey data for analyses for the ongoi
 
 # Parser V1
 
-Parser v1 contains programs for the first iteration of the trial. Programs in this parser include plotting and basic analyses. 
+Parser v1 contains programs for the first iteration of the trial. Programs in this parser include plotting and basic analyses. This has since been deprecated.
 
 # Parser V2
 
