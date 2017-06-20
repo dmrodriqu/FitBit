@@ -1,7 +1,11 @@
 from parser import Table
 import time
 import pandas as pd
+<<<<<<< HEAD
 fpath = '/Volumes/rubin-lab/FitBit/JSON Files/3lbQgJIF.json'
+=======
+fpath = '/Volumes/rubin-lab/FitBit/JSON Files/download.json'
+>>>>>>> parent of 58b29c9... Command line parser
 
 
 def stringCleaning(stringToClean): 
@@ -23,6 +27,7 @@ def getStartDates(table):
 	table['timeCompleted'] = table.timeCompleted.apply(convertTime)
 	table['timeRequested'] = table.timeRequested.apply(convertTime)
 	return table[['timeRequested','timeCompleted', 'id', 'survey', 'value']]
+<<<<<<< HEAD
 
 df = newTable(fpath)
 start =  getStartDates(df)
@@ -75,4 +80,44 @@ for questions in surveyItems:
 
 #[x.to_csv(str(x.columns[2])+".csv") for x in output(start)]
 
+=======
+'''	
+def _createKeysFromSurveys(startDataFrame):
+	return map(str, startDataFrame.survey.values)
+
+def _createValuesFromValuesInTable(startDataFrame):
+	return list(startDataFrame['value'].values)
+
+def createHashTableOfSurveyValueList(startDataFrame):
+	x = _createKeysFromSurveys(startDataFrame)
+	y = _createValuesFromValuesInTable(startDataFrame)
+	return zip(x,y)
+
+def createDfFromHashTable(startDataFrame):
+	return pd.DataFrame.from_records(createHashTableOfSurveyValueList(startDataFrame))
+'''
+df = newTable(fpath)
+start =  getStartDates(df)
+start = start.reset_index()
+
+def getEachIDCompletedTask(df):
+	groupColumns = ['survey', 'timeCompleted']
+	i = 0
+	while i < len(df.id.unique()):
+		yield df.pivot_table(index = 'id', columns = groupColumns, values = 'value').ix[i:i+1]#dropna(axis = 1)
+		i += 1
+
+def getEachIDRequested(df):
+	groupColumns = ['survey', 'timeRequested']
+	i = 0
+	while i < len(df.id.unique()):
+		yield df.pivot_table(index = 'id', columns = groupColumns, values = 'value').ix[i:i+1]#.dropna(axis = 1)
+		i += 1
+
+a = [x for x in getEachIDCompletedTask(start)][0]
+b =[x for x in getEachIDRequested(start)][0]
+c = pd.DataFrame(b.iloc[0]).reset_index()
+d = pd.DataFrame(a.iloc[0]).reset_index()
+print c.merge(d)[['survey', 'DUofMl', 'timeCompleted']].drop_duplicates()
+>>>>>>> parent of 58b29c9... Command line parser
 
