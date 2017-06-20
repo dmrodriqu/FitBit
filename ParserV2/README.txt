@@ -1,15 +1,17 @@
-# Finds and prints omissions of data to command line.
+Finds and prints omissions of data to command line.
 
 Command line usage:
+```
 $ python findomissions.py -h <help> -q <question> 
-
-# Executable usage:
+```
+Executable usage:
 
 ‘*’.command executables:
 
 command executes findomissions.py as the following:
-	
-	python findomissions.py -q ‘*’
+```	
+python findomissions.py -q ‘*’
+```
 
 where asterisk denotes question to be queried
 
@@ -56,12 +58,12 @@ with respect to anticipated survey windows.
 
 The most common printout will be in the following form:
 
-‘’’
+```
 LJWQle 
  completed on following dates: [[datetime.datetime(2017, 6, 1, 0, 0)]] 
  completed after window on following dates (bug): [] 
  and did not complete by [] 
-‘’’
+```
 
 The first line represents the participant ID
 The second line represents the dates of which 
@@ -77,13 +79,13 @@ line
 
 If any surveys appear in the last line as in the below output:
 
-‘’’
+```
 joMLAD 
  completed on following dates: [] 
  completed after window on following dates (bug): [] 
  and did not complete by [datetime.datetime(2017, 6, 1, 0, 0)] 
 CONTACT PATIENT
-‘’’
+```
 
 “CONTACT PATIENT” will appear. 
 
