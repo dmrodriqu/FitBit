@@ -1,5 +1,8 @@
 # A Collection of Data Analysis Programs for Fitbit Data
 
+
+[Documentation](https://dmrodriqu.github.io/fitbitdocs/#introduction)
+
 The enclosed programs parse biometric and survey data for analyses for the ongoing collaborative trial with Litmus Health at the University of Chicago. 
 
 
