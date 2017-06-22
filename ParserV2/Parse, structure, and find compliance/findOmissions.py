@@ -5,6 +5,140 @@ import numpy as np
 from datetime import datetime, timedelta
 import sys, getopt
 
+
+#additional PSQI class for aggregate scoring
+
+class Psqi:
+
+    def __init__(self, scoreArray):
+        self.scoreArray = scoreArray
+        self.comp1 = 0
+        self.comp2 = 0
+        self.comp3 = 0
+        self.comp4 = 0
+        self.comp5 = 0
+        self.comp6 = 0
+        self.comp7 = 0
+        self.score = 0
+
+    def _setScore(self, vals):
+        self.score = vals
+
+    def _setcomp1(self, vals):
+        self.comp1 = vals
+
+    def _setcomp2(self, vals):
+        self.comp2 = vals
+
+    def _setcomp3(self, vals):
+        self.comp3 = vals
+
+    def _setcomp4(self, vals):
+        self.comp4 = vals
+
+    def _setcomp5(self, vals):
+        self.comp5 = vals
+
+    def _setcomp6(self, vals):
+        self.comp6 = vals
+
+    def _setcomp7(self, vals):
+        self.comp7 = vals
+
+    def scoreall(self):
+        self._psqiComp1(self.scoreArray)
+        self._psqiComp2(self.scoreArray)
+        self._psqiComp3(self.scoreArray)
+        self._psqiComp4(self.scoreArray)
+        self._psqiComp5(self.scoreArray)
+        self._psqiComp6(self.scoreArray)
+        self._psqiComp7(self.scoreArray)
+
+    def _psqiComp1(self, scoreArray):
+        comp1 = scoreArray[13]
+        self._setcomp1(comp1)
+
+
+    def _psqiComp2(self, scoreArray):
+        # comp2
+        modscore = scoreArray[1] + scoreArray[4]
+        if 1 <= modscore <= 2:
+            modscore = 1
+        elif 3 <= modscore <= 4:
+            modscore = 2
+        elif modscore > 4:
+            modscore = 3
+        else:
+            modscore = 0
+        comp2 = modscore
+        self._setcomp2(comp2)
+
+
+    def _psqiComp3(self, scoreArray):
+        if scoreArray[3] > 7:
+            comp3 = 0
+        elif 6 <= scoreArray[3] < 7:
+            comp3 = 1
+        elif 5 <= scoreArray[3] < 6:
+            comp3 = 2
+        elif scoreArray[3] < 5:
+            comp3 = 3
+        else:
+            comp3 = 0
+        self._setcomp3(comp3)
+
+
+    def _psqiComp4(self, scoreArray):
+        if (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 > 100:
+            comp4 = 0
+        elif 75 <= (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 <= 84:
+            comp4 = 1
+        elif 65 <= (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 <= 74:
+            comp4 = 2
+        elif (scoreArray[2] / (scoreArray[0] - scoreArray[2])) * 100 < 65:
+            comp4 = 3
+        self._setcomp4(comp4)
+
+
+    def _psqiComp5(self, scoreArray):
+        comp5 = sum(scoreArray[5:13])
+        if 1 <= comp5 <= 9:
+            comp5 = 1
+        if 10 <= comp5 <= 18:
+            comp5 = 2
+        if 18 < comp5:
+            comp5 = 3
+        else:
+            comp5 = 0
+        self._setcomp5(comp5)
+
+    def _psqiComp6(self, scoreArray):
+        comp6 = scoreArray[14]
+        self._setcomp6(comp6)
+
+
+    def _psqiComp7(self, scoreArray):
+        comp7 = sum(scoreArray[15:17])
+        if 1 <= comp7 <= 2:
+            comp7 = 1
+        if 3 <= comp7 <= 4:
+            comp7 = 2
+        if 4 < comp7:
+            comp7 = 3
+        else:
+            comp7 = 0
+        self._setcomp7(comp7)
+
+
+    def globalPsqi(self):
+        self.score = self.comp1 + self.comp2 + self.comp3 + \
+            self.comp4 + self.comp5 + self.comp6 + self.comp7
+        self._setScore(self.score) #updated
+
+
+
+
+
 class SubData:
 
 	def __init__ (self, participantID, subsetOfOriginalDataframe):
@@ -139,6 +273,58 @@ class SubData:
 		except:
 			pass
 
+	def getSurveySeries(self, surveyType):
+		data = self.df
+		data = data[data['survey'].str.contains(surveyType)]
+		uniqueSurveys = data['timeRequested'].unique()
+		surveys = []
+		addToSurveys = surveys.append
+		for survey in uniqueSurveys:
+			addToSurveys(data[data['timeRequested']==survey])
+		self.uniqueSurveys = surveys
+
+
+	def scorePSQI(self, surveyToScore):
+		if len(surveyToScore) < 17:
+			pass
+		else:
+			i = 0
+			qvals = []
+			questionValueArray = surveyToScore['value'].values
+			while i < 17:
+				questionValues = questionValueArray[i]
+				if 4 <= i < 17:
+					qvals.append(questionValues - 1)
+				if i == 1:
+					valfor2 = (questionValues - 1)
+					if valfor2 > 3:
+						valfor2 = 3
+						qvals.append(valfor2)
+				if i == 3:
+					qvals.append(questionValues + 1)
+				if i == 0:
+					if questionValues == 1:
+						qvals.append(20.0)
+					if questionValues == 2:
+						qvals.append(20.5)
+					if questionValues == 3:
+						qvals.append(21.5)
+					if questionValues == 4:
+						qvals.append(22.5)
+					if questionValues == 5:
+						qvals.append(23.5)
+					if questionValues == 6:
+						qvals.append(0.5)
+					if questionValues == 7:
+						qvals.append(1.0)
+				i += 1
+			scores = Psqi(qvals)
+			try:
+				scores.scoreall()
+				scores.globalPsqi()
+				return scores.score
+			except:
+				pass
 
 
 class MainData: # this superclass sets up the main dataframe, another b-tree
@@ -216,6 +402,17 @@ class MainData: # this superclass sets up the main dataframe, another b-tree
 			initializeSubDataClass = SubData(participantID, subsetOfOriginalDataframe)
 			addToSubset(initializeSubDataClass)
 
+def main():
 
+	data = MainData()
+	data.createTraversal()
+	for subject in data.getSubsetData():
+		subject.getUniqueSurveys()
+		print subject.participantID
+		subject.getSurveySeries('PSQI')
+		print map (subject.scorePSQI, subject.uniqueSurveys)
+
+if __name__ == '__main__':
+	main()
 
 
