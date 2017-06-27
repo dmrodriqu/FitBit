@@ -141,6 +141,8 @@ class Psqi:
 
 class SubData:
 
+	patientsToContact = []
+
 	def __init__ (self, participantID, subsetOfOriginalDataframe):
 		self.participantID = participantID
 		self.df = subsetOfOriginalDataframe
@@ -237,6 +239,7 @@ class SubData:
 				if dateRanges[i+1][0] < datetime.now():
 					addToNonCompletionDates(dateRanges[i+1][0])
 					self._setContactPatient()
+					patientsToContact.append(self.participantID)
 					i += 1
 				else:
 					pass
@@ -244,6 +247,13 @@ class SubData:
 			return ('%s \n completed on following dates: %s \n completed after window on following dates (bug): %s \n and did not complete by %s \n' % 
 				(self.participantID[0], completionDates , completionAfterDates, nonCompletionDates))
 
+	def findLastVAS(self, question, timeInterval):
+		convertedIntToTimeDelta = timeDelta(timeInterval)
+		vasCompletionDates = self.getQuestionDate(question, requested = 'completed')
+		if datetime.now - vasCompletionDates[:-1] > convertedIntToTimeDelta:
+			patientsToContact.append(self.participantID)
+		else:
+			pass
 
 	def findVASOmissions(self, question):
 		listOfIdsToContact = []
