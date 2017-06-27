@@ -1,2 +1,2 @@
-cd /Volumes/rubin-lab/FitBit/ParserV2/parser\ command\ line 
+cd /Users/Dylan/Dropbox/FitBit\ Scripts/FitBit/ParserV2/Parse\,\ structure\,\ and\ find\ compliance 
 python printomissions.py -q psqi
