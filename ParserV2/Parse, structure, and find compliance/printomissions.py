@@ -36,13 +36,15 @@ def main(argv):
 	for df in data.getSubsetData():
 		df._setEnrollmentDate(df.getQuestionDate('Demo'))
 		df.calculateCompletionDates()
-		if questionToQuery == 'vas' or questionToQuery ==  'SubjectGlobalAssessmentVAS':
-			print df.findVASOmissions(questionToQuery)
+		if questionToQuery == 'SubjectGlobalAssessmentVAS':
+			df.findLastVAS(questionToQuery, 2)
+			contactList.append(df.patientsToContact)
 		else:
 			print df.findOmissions(questionToQuery)
 			if df.contactPatient:
 				print "CONTACT PATIENT"
-
+	print"Patients to Contact: \n" 
+	print set([item for sublist in contactList for item in sublist])
 		
 
 if __name__ == "__main__":
