@@ -12,11 +12,16 @@ class Table:
 		self.renameCol()
 
 	def openJsonFile(self):
+		##
+		# opens a json file and creates a file object
 	    jsonToParse = open(self.path).read()
 	    return jsonToParse
 	
 	def parseJson(self):
+		##
+		# parses into a pandas dataframe
 		openedJsonFile = self.openJsonFile()
+		print pd.read_json(openedJsonFile)
 		return pd.read_json(openedJsonFile)
 	
 	def createDataFrame(self, series):
@@ -65,6 +70,11 @@ class Table:
 		  'value', 'corp', 'study', 'id', 'survey']
 	
 
+def main():
+	data = Table('/Users/Dylan/Dropbox/FitBit Scripts/FitBit/ParserV2/Parse, structure, and find compliance/6HQFtykt.json')
+
+if __name__ == '__main__':
+	main()
 
 
 

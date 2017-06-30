@@ -259,6 +259,7 @@ class SubData:
 		else:
 			pass
 
+
 	#def findVASOmissions(self, question):
 	#	listOfIdsToContact = []
 	#	datesCompleted = []
