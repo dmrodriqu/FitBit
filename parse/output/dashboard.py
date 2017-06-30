@@ -45,10 +45,8 @@ class Results:
 		for k, v in dates.iteritems():
 			i = 0
 			while i < len(v) - 1:
-				print v
 				try:
 					dateDiff = datetime.datetime.strptime(v[i+1][0] , "%Y-%m-%d") - datetime.datetime.strptime(v[i][0], "%Y-%m-%d")
-					print dateDiff
 				except:
 					i+=1
 				if dateDiff > datetime.timedelta(days = 1):
@@ -64,14 +62,12 @@ class Results:
 	def output(self, date = True, values = False):
 		a =  pd.DataFrame.from_dict(self.Values, orient = 'index')
 		b = pd.DataFrame.from_dict(self.insertDateGaps(self.Dates),  orient = 'index')
-		print b
-
 		if values:
 			return a.to_csv('{}.csv'.format(self.survey))
 		else: 
-			return b.to_csv('{}.csv')
+			return b.to_csv('{}.csv'.format(self.survey))
 		
 
 #usage 
 result = Results('WongBaker')
-print result.output(values = False)
+result.output(values = False)
