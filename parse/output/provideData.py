@@ -51,5 +51,5 @@ class Results:
 		
 
 
-result = Results('SubjectGlobalAssessmentVAS')
-print result.output(values = True)
+result = Results('PSQI')
+print result.output()
