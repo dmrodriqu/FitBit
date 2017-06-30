@@ -50,6 +50,6 @@ class Results:
 			return b
 		
 
-
-result = Results('PSQI')
-print result.output()
+# usage 
+#result = Results('PSQI')
+#print result.output()
