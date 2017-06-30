@@ -68,6 +68,3 @@ class Results:
 			return b.to_csv('{}.csv'.format(self.survey))
 		
 
-#usage 
-result = Results('WongBaker')
-result.output(values = False)
