@@ -22,3 +22,7 @@ Parser V2 contains a command line utility that parses and analyzes a JSON file t
  - statsmodels
  - seaborn
 
+
+# Pubs:
+
+http://www.gastrojournal.org/article/S0016-5085(17)36447-8/fulltext
